@@ -1,0 +1,59 @@
+multi_automation_dashboard/
+├── .env
+├── main.py 
+├── requirements.txt
+├── static/
+│   └── styles.css
+│   └── fabicon_ico
+│   └── js
+│   │   └── auth.js
+│   │   └── automation.js
+├── app/
+|   ├── api/
+|   │   └──v1/
+|   │   |   └──conversion/
+|   │   │   |  └──get_request.py
+|   ├── controllers/
+│   │   └── conversion
+│   │   │   └── AcquisitionController.py
+│   │   │   └── SpreadSheetController.py
+|   ├── debug/
+│   │   └── line.py = printing line and title
+|   ├── constant/
+│   │   └── conversion.py = all the constant
+|   ├── dependencies/
+│   │   └── auth.py = check authenticated users using Depend
+|   ├── helpers/
+|   │   └──conversion/
+│   │   |  └── conversion.py = conversion helpers
+│   │   |  └── spreadsheet.py = conversion helpers
+│   │   └── template.py = initialize templates
+|   ├── services/
+│   │   └── google_auth.py = verify the token request and return (email,picture,name)
+|   ├── utils/
+│   │   └── session.py = manage user sessions
+│   ├── core/
+│   │   └── base_router.py = handle main routes for authentication
+│   ├── config/
+│   │   └── loader.py = load .env condiguration globally
+│   ├── automations/
+│   │   ├── conversion/
+│   │   │   ├── logic.py
+│   │   │   ├── routes.py
+│   │   ├── media/
+│   │   │   ├── logic.py
+│   │   │   ├── routes.py
+│   └── templates/
+│   |   └── partials
+│   │   │   ├── _header.html
+│   │   │   ├── _sidebar.html
+│   |   └── auth
+│   │   │   ├── auth.html
+│   |   └── pages
+│   │   │   ├── dashboard
+│   │   │   └── └──index.html
+│   |   └── base.html
+
+
+#to run:
+uvicorn main:app --reload

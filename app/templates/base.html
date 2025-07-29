@@ -1,0 +1,90 @@
+<!-- app/templates/base.html -->
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Centralized Automation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="/static/favicon_io/site.webmanifest">
+
+    <script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.store('tab', 'conversion_automation');
+      });
+    </script>
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+
+    {% block head_extra %}{% endblock %}
+
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+      .loader {
+        border-top-color: #16a34a;
+        border-left-color: transparent;
+        border-right-color: transparent;
+        border-bottom-color: transparent;
+      }
+      /* Thin green horizontal scrollbar for all browsers supporting WebKit */
+      ::-webkit-scrollbar {
+        height: 6px; /* thinner scrollbar */
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: #22c55e; /* Tailwind green-500 */
+        border-radius: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background-color: #e0f2f1; /* Optional: track color */
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900 h-full">
+    <!-- Loader Overlay -->
+    <div
+      id="login-loader"
+      class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4"
+      >
+        <svg
+          class="animate-spin h-6 w-6 text-blue-600"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          />
+        </svg>
+        <span class="text-sm text-gray-700">Signing in, please wait...</span>
+      </div>
+    </div>
+
+    {% block content %}{% endblock %}
+  </body>
+</html>

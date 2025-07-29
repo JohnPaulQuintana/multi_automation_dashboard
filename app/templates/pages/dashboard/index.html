@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard{% endblock %}
+{% block content %}
+<div class="bg-green-50 text-gray-800 h-screen overflow-hidden" x-data>
+  <!-- Mobile Navbar -->
+  <div class="md:hidden flex justify-between items-center px-4 py-3 bg-white border-b shadow-sm">
+    <button onclick="toggleSidebar()" class="text-green-700">
+      <i data-lucide="menu" class="w-6 h-6"></i>
+    </button>
+    <div class="flex items-center gap-2">
+      <img
+        src="{{ user.picture }}"
+        alt="User"
+        class="w-9 h-9 rounded-full border object-cover"
+      />
+    </div>
+  </div>
+
+  <!-- Sidebar Overlay (Mobile only) -->
+  <div
+    id="sidebar-backdrop"
+    class="fixed inset-0 bg-black bg-opacity-40 z-20 hidden md:hidden"
+    onclick="closeSidebar()"
+  ></div>
+
+  <div class="grid grid-cols-1 md:grid-cols-[260px,1fr] h-full w-full">
+    <!-- Sidebar -->
+    {% include "partials/_sidebar.html" %}
+
+    <!-- Main Content -->
+    <main class="relative flex flex-col h-screen overflow-hidden">
+      <!-- Sticky Header -->
+      {% include "partials/_header.html" %}
+
+      <!-- Tab Content -->
+      <div id="d-tab-content" class="flex-1 overflow-y-auto p-2 md:p-4">
+        <!-- Automation 1 -->
+        <div x-show="$store.tab === 'conversion_automation'" x-transition class="flex items-center justify-between">
+          <h2 class="text-xl font-bold">Conversion Automation</h2>
+            <button
+              id="conversionBtn"
+              onclick="startConversionAutomation()"
+              class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+            >
+              <i data-lucide="play" class="inline w-4 h-4 mr-2"></i> Start
+            </button>
+        </div>
+
+        <!-- Automation 2 -->
+        <div x-show="$store.tab === 'social_media_automation'" x-transition class="flex items-center justify-between">
+          <h2 class="text-xl font-bold">Social Media Automation</h2>
+          <button
+            id="mediaBtn"
+            onclick="startSocialMediaAutomation()"
+            class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          >
+            <i data-lucide="play-circle" class="inline w-4 h-4 mr-2"></i> Start
+          </button>
+        </div>
+
+        <!-- Job Log Panel -->
+        <div x-show="$store.tab === 'social_media_automation' || $store.tab === 'conversion_automation'" x-transition id="job-log-panel" class="mt-6 bg-gray-900 rounded-md shadow-lg h-[calc(100vh-160px)] overflow-y-auto border border-gray-700">
+          <div class="flex justify-between items-center p-3 border-b border-gray-700">
+            <h2 class="text-sm font-semibold text-green-400 tracking-wide">Automation Logs</h2>
+            <button
+              onclick="copyLogs()"
+              class="text-xs text-gray-300 hover:text-white px-2 py-1 border border-gray-600 rounded-md hover:bg-gray-700 transition"
+            >
+              Copy Logs
+            </button>
+          </div>
+          <pre id="job-log-content" class="text-green-400 text-sm font-mono p-4 whitespace-pre-wrap leading-relaxed">
+
+          </pre>
+        </div>
+
+      </div>
+
+
+      <div class="p-10 flex md:hidden"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Enhanced Dashboard Loader -->
+<div
+  id="dashboard-loader"
+  class="hidden absolute inset-0 bg-white bg-opacity-80 z-50 flex flex-col items-center justify-center space-y-6"
+>
+  <!-- Spinner -->
+  <div class="relative w-20 h-20">
+    <div class="absolute inset-0 rounded-full border-[6px] border-t-green-500 border-gray-300 animate-spin"></div>
+    <div class="absolute inset-1 rounded-full bg-white"></div>
+    <svg class="absolute inset-2 w-8 h-8 text-green-500 m-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-6m-6-6l6 6m-6-6v6h6" />
+    </svg>
+  </div>
+
+  <!-- Loading Text -->
+  <div class="text-lg text-green-600 font-bold animate-pulse tracking-wide">
+    Reconstructing layout...
+  </div>
+</div>
+
+<!-- JS Scripts -->
+<script>
+  const sidebar = document.getElementById("sidebar");
+  const sidebarBackdrop = document.getElementById("sidebar-backdrop");
+
+  const toggleSidebar = () => {
+    sidebar.classList.toggle("-translate-x-full");
+    sidebarBackdrop.classList.toggle("hidden");
+  }
+
+  const closeSidebar = () => {
+    sidebar.classList.add("-translate-x-full");
+    sidebarBackdrop.classList.add("hidden");
+  }
+
+  const logout = () => {
+    fetch("/auth/logout", { method: "GET", credentials: "include" }).then(() => {
+      localStorage.removeItem("google_id_token");
+      window.location.href = "/";
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.lucide) window.lucide.createIcons();
+
+  });
+</script>
+
+<!-- inject automation js handler -->
+ <script src="/static/js/automation.js"></script>
+{% endblock %}
