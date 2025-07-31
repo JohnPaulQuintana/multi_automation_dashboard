@@ -1,0 +1,181 @@
+{
+  "2025-07-01": {
+    "Date": "2025-07-01",
+    "NSU": 109029,
+    "FTD": 38159,
+    "Conversion Rate": "0.350",
+    "UDW Unique Depositors": 286815,
+    "UDW Deposit Count": 2752372,
+    "UDW Deposit Amount": 5860154183.53,
+    "UDW Unique Withdrawer": 194884,
+    "UDW Withdrawal Count": 1061008,
+    "UDW Withdrawal Amount": 5023037600.0,
+    "UDW Cash Inflow/(Outflow)": 837116583.5299997,
+    "UDW No. Unique Players W/ Returning Deposits": 248656,
+    "UDW Returning Deposits Count": 2714213,
+    "TBA Total Turnover": 61764631142.86946,
+    "TBA Profit/Loss": 1920009180.0364928,
+    "TBA Gross Margin (%)": 0.03108590053092468,
+    "TBA (-) Bonus Cost": 725454588.2699869,
+    "TBA (-) Adjustment": 95916134.71999988,
+    "TBA (-) VIP Cash": 305049582.0,
+    "TBA Net Gross Profit": 1098638457.0465062,
+    "TBA Average Daily Turnover": 1992407456.2215955,
+    "TBA Average Daily Active Players": 16540,
+    "TBA Average Daily Profit/Loss": 61935780.001177184,
+    "GTR Total Unique Active Players": 512742,
+    "GTR Total Turnover": 61764631697.8695,
+    "GTR Profit/Loss": 1919998844.6064963,
+    "GTR Turnover Margin (%)": 0.031085732915861045,
+    "PRD Products": [
+      {
+        "PRD Product Type": "CASINO",
+        "PRD Number of Unique Player": 157118,
+        "PRD Total Turnover": 14307542271.535997,
+        "PRD Profit/Loss": 359831923.6571981,
+        "PRD Margin": 0.02514980678219363
+      },
+      {
+        "PRD Product Type": "FH",
+        "PRD Number of Unique Player": 17438,
+        "PRD Total Turnover": 541921034.6600002,
+        "PRD Profit/Loss": 17108320.8267,
+        "PRD Margin": 0.03156976705551522
+      },
+      {
+        "PRD Product Type": "LOTTERY",
+        "PRD Number of Unique Player": 7774,
+        "PRD Total Turnover": 58900664.60280002,
+        "PRD Profit/Loss": 2140552.9658000004,
+        "PRD Margin": 0.03634174555134379
+      },
+      {
+        "PRD Product Type": "CRASH",
+        "PRD Number of Unique Player": 155272,
+        "PRD Total Turnover": 6892603508.778002,
+        "PRD Profit/Loss": 234547520.71799994,
+        "PRD Margin": 0.03402887173464924
+      },
+      {
+        "PRD Product Type": "P2P",
+        "PRD Number of Unique Player": 5126,
+        "PRD Total Turnover": 78763697.62,
+        "PRD Profit/Loss": 4141747.45,
+        "PRD Margin": 0.052584471973143
+      },
+      {
+        "PRD Product Type": "SLOT",
+        "PRD Number of Unique Player": 458501,
+        "PRD Total Turnover": 23593103510.319756,
+        "PRD Profit/Loss": 741563132.4949998,
+        "PRD Margin": 0.031431351630811774
+      },
+      {
+        "PRD Product Type": "ARCADE",
+        "PRD Number of Unique Player": 19284,
+        "PRD Total Turnover": 38802176.87,
+        "PRD Profit/Loss": 1381418.1193000001,
+        "PRD Margin": 0.03560156235378761
+      },
+      {
+        "PRD Product Type": "ESport",
+        "PRD Number of Unique Player": 11,
+        "PRD Total Turnover": 464526.0,
+        "PRD Profit/Loss": -143000.9,
+        "PRD Margin": -0.3078426180665883
+      },
+      {
+        "PRD Product Type": "TABLE",
+        "PRD Number of Unique Player": 88976,
+        "PRD Total Turnover": 3127976465.7758994,
+        "PRD Profit/Loss": 111205555.70050004,
+        "PRD Margin": 0.03555191572482478
+      },
+      {
+        "PRD Product Type": "Sport",
+        "PRD Number of Unique Player": 117797,
+        "PRD Total Turnover": 13118904808.794994,
+        "PRD Profit/Loss": 452121294.1340001,
+        "PRD Margin": 0.03446334131724892
+      }
+    ],
+    "PRD Product Type": null,
+    "PRD Number of Unique Player": 3898,
+    "PRD Total Turnover": 5649032.910000002,
+    "PRD Profit/Loss": -3899620.5599999987,
+    "PRD Margin": -0.6903164881721316,
+    "PMT Purpose": [
+      {
+        "PMT Purpose": "Acquisition",
+        "Rank_1": "Daily Login (General)",
+        "Rank_2": "সকল গেমের উপর ১০০% বোনাস",
+        "Rank_3": "রেফারেল ক্যাশ & বোনাস",
+        "Rank_4": "৳৭,৭৭৭ স্পোর্টস বোনাস",
+        "Rank_5": "স্লট ও ফিশিং-এ ১০০% বোনাস",
+        "Rank_6": "ক্রিকেট ক্ল্যাশ চ্যালেঞ্জ",
+        "Rank_7": "৫০% Evolution Gaming বোনাস",
+        "Rank_8": "PlayTech ক্যাসিনো ওয়েলকাম বোনাস",
+        "Rank_9": "২৫% লাইভ ক্যাসিনো & টেবিল ক্যাশব্যাক",
+        "Rank_10": "-",
+        "PMT Bonus Cost": 80338637.28000002,
+        "PMT Total Claimed": 3469639,
+        "PMT Total Unique Player Claimed": 461656
+      },
+      {
+        "PMT Purpose": "Conversion",
+        "Rank_1": "৳৩০০ এক্সক্লুসিভ বোনাস",
+        "Rank_2": "-",
+        "Rank_3": "-",
+        "Rank_4": "-",
+        "Rank_5": "-",
+        "Rank_6": "-",
+        "Rank_7": "-",
+        "Rank_8": "-",
+        "Rank_9": "-",
+        "Rank_10": "-",
+        "PMT Bonus Cost": 638400.0,
+        "PMT Total Claimed": 2128,
+        "PMT Total Unique Player Claimed": 2128
+      },
+      {
+        "PMT Purpose": "Reactivation",
+        "Rank_1": "১.৫% পর্যন্ত দৈনিক রিবেট",
+        "Rank_2": "৩০% ক্যাশব্যাক বোনাস",
+        "Rank_3": "৫০% রিলোড বোনাস",
+        "Rank_4": "১০০% রিলোড বোনাস",
+        "Rank_5": "৮০% রিলোড বোনাস",
+        "Rank_6": "৩% ডিপোজিট বোনাস",
+        "Rank_7": "-",
+        "Rank_8": "-",
+        "Rank_9": "-",
+        "Rank_10": "-",
+        "PMT Bonus Cost": 9079705.630000003,
+        "PMT Total Claimed": 38523,
+        "PMT Total Unique Player Claimed": 19496
+      },
+      {
+        "PMT Purpose": "Retention",
+        "Rank_1": "৪% পর্যন্ত আনলিমিটেড বুস্ট",
+        "Rank_2": "আনলিমিটেড ডেইলি ক্যাশব্যাক",
+        "Rank_3": "৳১০ কোটির প্রাইজ পুল",
+        "Rank_4": "১৭% আনলিমিটেড স্লট ক্যাশব্যাক",
+        "Rank_5": "২.৩% আনলিমিটেড ক্যাশ রিবেট",
+        "Rank_6": "১০.৬৬% আনলিমিটেড ক্যাশব্যাক",
+        "Rank_7": "৳১০,০০০ স্লট এবং ফিশিং রিলোড বোনাস",
+        "Rank_8": "১.৭% লাইভ ক্যাসিনো রিবেট",
+        "Rank_9": "ভিআইপি লেভেল আপ রিওয়ার্ড",
+        "Rank_10": "৳৫৭৭ এক্সট্রা ক্যাশ প্রাইজ",
+        "PMT Bonus Cost": 650235105.2400024,
+        "PMT Total Claimed": 6353200,
+        "PMT Total Unique Player Claimed": 316699
+      }
+    ],
+    "BC Total Bonus Cost": 725454413.2700027,
+    "BC Total Claimed": 9720196,
+    "BC Total Unique Player Claimed": 509970,
+    "VIP Count": 1941425,
+    "VIP Cash": 305049582.0,
+    "RAF Count": 838196,
+    "RAF Commission": 29374433.620000035
+  }
+}
