@@ -1,72 +1,80 @@
 let isConversionRunning = false;
 let isSocialMediaRunning = false;
+let isBusinessProcessRunning = false;
 
 const conversionBtn = document.getElementById("conversionBtn");
 const mediaBtn = document.getElementById("mediaBtn");
+const businessBtn = document.getElementById("businessBtn")
 const logPanel = document.getElementById("job-log-panel");
 const logContent = document.getElementById("job-log-content");
 
 // Utility: Poll logs from backend
 const pollLogs = (jobId) => {
-  if (!jobId) return;
+if (!jobId) return;
 
-  const logPanel = document.getElementById("job-log-panel");
-  const logContent = document.getElementById("job-log-content");
+const logPanel = document.getElementById("job-log-panel");
+const logContent = document.getElementById("job-log-content");
 
-  logPanel.classList.remove("hidden");
-  logContent.textContent = "[INFO] Starting log stream...\n";
+logPanel.classList.remove("hidden");
+logContent.textContent = "[INFO] Starting log stream...\n";
 
-  const interval = setInterval(async () => {
+const interval = setInterval(async () => {
     try {
-      const res = await fetch(`/api/v1/conversion/logs/${jobId}`);
-      if (!res.ok) throw new Error("Log fetch failed");
+    const res = await fetch(`/api/v1/conversion/logs/${jobId}`);
+    if (!res.ok) throw new Error("Log fetch failed");
 
-      const data = await res.json();
-      const logs = data.logs || [];
+    const data = await res.json();
+    const logs = data.logs || [];
 
-      const now = new Date().toLocaleString();
+    const now = new Date().toLocaleString();
 
-      // Map logs with inline fallback for null entries
-      const renderedLogs = logs.map(line => {
+    // Map logs with inline fallback for null entries
+    const renderedLogs = logs.map(line => {
         if (line === null || line === undefined) {
-          return `[${now}] ⏳ Still processing...`;
+        return `[${now}] ⏳ Still processing...`;
         }
         return `[${now}] ${line}`;
-      });
+    });
 
-      logContent.textContent = renderedLogs.join("\n");
-      logPanel.scrollTop = logPanel.scrollHeight;
+    logContent.textContent = renderedLogs.join("\n");
+    logPanel.scrollTop = logPanel.scrollHeight;
 
-      // Detect completion
-      if (logs.at(-1)?.includes("✅ Job complete")) {
+    // Detect completion
+    if (logs.at(-1)?.includes("✅ Job complete")) {
         clearInterval(interval);
         localStorage.removeItem("conversionRunning");
         localStorage.removeItem("conversionJobId");
         localStorage.removeItem("socialMediaRunning");
         localStorage.removeItem("socialMediaJobId");
+        localStorage.removeItem("businessProcessRunning");
+        localStorage.removeItem("businessProcessJobId");
 
         isConversionRunning = false;
         isSocialMediaRunning = false;
+        isBusinessProcessRunning = false;
 
         conversionBtn.disabled = false;
         conversionBtn.textContent = "Start Conversion";
         mediaBtn.disabled = false;
         mediaBtn.textContent = "Start Social";
-      }
+
+        businessBtn.disable =false;
+        businessBtn.textContent = "Start Business Process";
+    }
 
     } catch (err) {
-      console.error("Log polling error:", err);
-      clearInterval(interval);
+    console.error("Log polling error:", err);
+    clearInterval(interval);
     }
-  }, 2000);
+}, 2000);
 };
 
 
 const copyLogs = () => {
-  const content = document.getElementById("job-log-content").textContent;
-  navigator.clipboard.writeText(content).then(() => {
-    alert("Logs copied to clipboard!");
-  });
+    const content = document.getElementById("job-log-content").textContent;
+    navigator.clipboard.writeText(content).then(() => {
+        alert("Logs copied to clipboard!");
+    });
 };
 
 
@@ -135,6 +143,57 @@ const startSocialMediaAutomation = async () => {
         console.error("Social media error:", err);
         console.error("Social media automation failed.");
         localStorage.removeItem("socialMediaRunning");
+    }
+};
+
+
+const startBusinessProcessAutomation = async (formData) => {
+    if (isBusinessProcessRunning || localStorage.getItem("businessProcessRunning") === "true") {
+        console.log("Business Process is already running.")
+        return;
+    }
+    const {
+        selectedBrand,
+        selectedCurrency,
+        selectedTimeGrain,
+        startDate,
+        endDate
+    } = formData;
+
+    isBusinessProcessRunning = true;
+    localStorage.setItem("businessProcessRunning", "true");
+
+    businessBtn.disabled = true;
+    businessBtn.textContent = "Processing...";
+
+    try {
+        const res = await fetch("/api/v1/business/start", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                brand: selectedBrand,
+                currency: selectedCurrency,
+                timeGrain: selectedTimeGrain,
+                startDate,
+                endDate
+            })
+        });
+        const data = await res.json();
+        console.log("Business Process Done: ", data);
+        if (data.job_id) {
+            localStorage.setItem("businessProcessJobId", data.job_id);
+            pollLogs(data.job_id);
+        }
+
+        console.log("Business Process Started Succesfully..");
+        localStorage.removeItem("businessProcessRunning")
+    } catch (err) {
+        console.error("Business Process Error: ", err);
+        console.log("Business Process Failed,");
+        localStorage.removeItem("businessProcessRunning")
+
     }
 };
 

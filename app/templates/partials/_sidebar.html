@@ -32,6 +32,14 @@
     >
       <i data-lucide="send" class="w-4 h-4 inline-block mr-2"></i> Socal Media
     </button>
+
+    <button
+      @click="$store.tab = 'business_process_automation'"
+      class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
+      :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'business_process_automation' }"
+    >
+      <i data-lucide="briefcase-business" class="w-4 h-4 inline-block mr-2"></i> Business Process
+    </button>
   </div>
 
 
