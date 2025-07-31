@@ -1,8 +1,8 @@
-from app.config.loader import USERNAME,PASSWORD,SOCIAL_SHEET_ID,AFFILIATE_SHEET_ID
+from app.config.loader import SS_USERNAME, SS_PASSWORD
 from app.constant.conversion import YESTERDAY,TARGET_DATE,SHEET_DATE,SOCIAL_RANGES,AFFILIATE_RANGES
 from app.debug.line import debug_line, debug_title
 from app.controllers.business_process.supersetScraping import supersetScraping
-from app.controllers.business_process.businessSpreadsheet import BusinessSpreadsheet
+from app.controllers.business_process.businessSpreadsheet import Spreadsheet
 from app.helpers.conversion.spreadsheet import SpreadsheetController as Sheet
 from .schema import BusinessAutomationInput
 from app.automations.log.state import log  # ✅ import from new file
@@ -34,6 +34,8 @@ async def run(job_id, data: BusinessAutomationInput):
         raise RuntimeError("Missing brand, currency, timeGrain, startDate, or endDate.")
     try:
         data = supersetScraping(
+            SS_USERNAME,
+            SS_PASSWORD,
             data.brand,
             data.currency,
             data.timeGrain,
@@ -48,12 +50,13 @@ async def run(job_id, data: BusinessAutomationInput):
         log(job_id, "✅ Scraping and data saving completed successfully.")
         log(job_id, f"Merged Results: {json.dumps(result.get('data'), indent=2)}")
 
-        spreadsheet = BusinessSpreadsheet(
+        spreadsheet = Spreadsheet(
             data.brand,
             data.currency,
             data.timeGrain,
             data.startDate,
-            data.endDate
+            data.endDate,
+            data=result.get('data')
         )
         gs = spreadsheet.transfer(job_id)
     except Exception as e:

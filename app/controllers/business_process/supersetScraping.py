@@ -7,8 +7,9 @@ import json
 import time
 
 class supersetScraping:
-    def __init__(self, brand, currency, timeGrain, startDate, endDate):
-        
+    def __init__(self, username, password, brand, currency, timeGrain, startDate, endDate):
+        self.username = username
+        self.password = password
         self.brand = brand
         self.currency = currency
         self.timeGrain = timeGrain
@@ -190,8 +191,8 @@ class supersetScraping:
     async def authenticate(self, page, job_id):
         print("Authentication on Process")
         log(job_id, "Authentication on Process")
-        await page.fill('input[name="username"]', 'skyejett')
-        await page.fill('input[name="password"]', 'Abcd1234')
+        await page.fill('input[name="username"]', self.username)
+        await page.fill('input[name="password"]', self.password)
         await asyncio.sleep(.5)
         await page.click('input[type="submit"]')
         await page.wait_for_load_state('networkidle')
@@ -204,7 +205,7 @@ class supersetScraping:
         try:
             start_time = time.time()
             async with async_playwright() as p:
-                browser = await p.chromium.launch(headless = False)
+                browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
                 await page.goto('https://ar0ytyts.superdv.com/superset/sqllab/')
                 await self.authenticate(page, job_id)

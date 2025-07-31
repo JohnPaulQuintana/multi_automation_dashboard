@@ -14,6 +14,11 @@ PASSWORD           = os.getenv("BO_PASSWORD", "")
 SOCIAL_SHEET_ID    = os.getenv("SOCIALMEDIA_SHEET", "")
 AFFILIATE_SHEET_ID = os.getenv("AFFILIATE_SHEET", "")
 
+
+#Business Process Automation
+SS_USERNAME = os.getenv("SS_USERNAME", "")
+SS_PASSWORD = os.getenv("SS_PASSWORD", "")
+
 TYPE = os.getenv("TYPE")
 PROJECT_ID = os.getenv("PROJECT_ID")
 PRIVATE_KEY_ID = os.getenv("PRIVATE_KEY_ID")
