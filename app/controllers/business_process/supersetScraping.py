@@ -19,12 +19,12 @@ class supersetScraping:
     # ────────────────────────────────────────────────────────────
     # Scraping Method on the Network Request 
     # ────────────────────────────────────────────────────────────
-    def json_save(self, job_id, data, filename):
-        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".", "json"))
-        output_path = os.path.join(json_dir, filename)  
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        log(job_id, f"🎯 Results saved to {output_path}")
+    # def json_save(self, job_id, data, filename):
+    #     json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".", "json"))
+    #     output_path = os.path.join(json_dir, filename)  
+    #     with open(output_path, 'w', encoding='utf-8') as f:
+    #         json.dump(data, f, ensure_ascii=False, indent=2)
+    #     log(job_id, f"🎯 Results saved to {output_path}")
 
     def missing_date(self, merged_results, startDate, raw_end_date):
         if self.timeGrain == "Day":
@@ -197,7 +197,6 @@ class supersetScraping:
         await page.click('input[type="submit"]')
         await page.wait_for_load_state('networkidle')
         await asyncio.sleep(1.5)
-        print("Authenticated Success")
         log(job_id, "Authenticated Success")
         
     async def scraping(self, job_id):
@@ -227,13 +226,13 @@ class supersetScraping:
                             "data": {}
                         }
                 await browser.close()
-
+    
                 merged_results = self.merge_result(job_id, all_results)
                 # merged_list = [{"Date": date, **data} for date, data in merged_results.items()]
                 complete_date = self.missing_date(merged_results, self.startDate, self.endDate)
 
-                # Save result
-                self.json_save(job_id, complete_date, filename="result.json")
+                # Save result Not needed
+                # self.json_save(job_id, complete_date, filename="result.json")
 
             end_time = time.time() - start_time
             total_minutes = end_time / 60
@@ -242,7 +241,7 @@ class supersetScraping:
             return {
                 "status": 200,
                 "text": "Scraping and Data has been saved successfully",
-                "data": merged_results,
+                "data": complete_date,
             }
         except Exception as e:
             log(job_id, f"❌ Job failed...Authentication error:\n{e}")

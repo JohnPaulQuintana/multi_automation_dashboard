@@ -4,13 +4,13 @@ let isBusinessProcessRunning = false;
 
 const conversionBtn = document.getElementById("conversionBtn");
 const mediaBtn = document.getElementById("mediaBtn");
-const businessBtn = document.getElementById("businessBtn")
+const businessBtn = document.getElementById("businessBtn");
 const logPanel = document.getElementById("job-log-panel");
 const logContent = document.getElementById("job-log-content");
 
 // Utility: Poll logs from backend
-const pollLogs = (jobId) => {
-if (!jobId) return;
+const pollLogs = (jobId, jobType) => {
+if (!jobId || !jobType) return;
 
 const logPanel = document.getElementById("job-log-panel");
 const logContent = document.getElementById("job-log-content");
@@ -20,7 +20,7 @@ logContent.textContent = "[INFO] Starting log stream...\n";
 
 const interval = setInterval(async () => {
     try {
-    const res = await fetch(`/api/v1/conversion/logs/${jobId}`);
+    const res = await fetch(`/api/v1/${jobType}/logs/${jobId}`);
     if (!res.ok) throw new Error("Log fetch failed");
 
     const data = await res.json();
@@ -55,11 +55,12 @@ const interval = setInterval(async () => {
 
         conversionBtn.disabled = false;
         conversionBtn.textContent = "Start Conversion";
+        
         mediaBtn.disabled = false;
         mediaBtn.textContent = "Start Social";
 
-        businessBtn.disable =false;
-        businessBtn.textContent = "Start Business Process";
+        businessBtn.disabled = false;
+        businessBtn.textContent = "Start Process";
     }
 
     } catch (err) {
@@ -100,7 +101,7 @@ const startConversionAutomation = async () => {
         // Save job ID and start polling
         if (data.job_id) {
             localStorage.setItem("conversionJobId", data.job_id);
-            pollLogs(data.job_id);
+            pollLogs(data.job_id, "conversion");
         }
 
         // alert is moved after polling starts
@@ -134,7 +135,7 @@ const startSocialMediaAutomation = async () => {
         // Save job ID and start polling
         if (data.job_id) {
             localStorage.setItem("socialMediaJobId", data.job_id);
-            pollLogs(data.job_id);
+            pollLogs(data.job_id, "media");
         }
 
         console.log("Social media automation started.");
@@ -184,7 +185,7 @@ const startBusinessProcessAutomation = async (formData) => {
         console.log("Business Process Done: ", data);
         if (data.job_id) {
             localStorage.setItem("businessProcessJobId", data.job_id);
-            pollLogs(data.job_id);
+            pollLogs(data.job_id, "business");
         }
 
         console.log("Business Process Started Succesfully..");
@@ -201,6 +202,7 @@ const startBusinessProcessAutomation = async (formData) => {
 window.addEventListener("DOMContentLoaded", () => {
     const conversionRunning = localStorage.getItem("conversionRunning") === "true";
     const socialMediaRunning = localStorage.getItem("socialMediaRunning") === "true";
+    const businessProcessRunning = localStorage.getItem("businessProcessRunning") === "true";
 
     if (conversionRunning) {
         conversionBtn.disabled = true;
@@ -208,7 +210,7 @@ window.addEventListener("DOMContentLoaded", () => {
         isConversionRunning = true;
 
         const jobId = localStorage.getItem("conversionJobId");
-        if (jobId) pollLogs(jobId);
+        if (jobId) pollLogs(jobId, "conversion");
     }
 
     if (socialMediaRunning) {
@@ -217,6 +219,16 @@ window.addEventListener("DOMContentLoaded", () => {
         isSocialMediaRunning = true;
 
         const jobId = localStorage.getItem("socialMediaJobId");
-        if (jobId) pollLogs(jobId);
+        if (jobId) pollLogs(jobId, "media");
+        
+    }
+
+    if (businessProcessRunning) {
+        businessBtn.disabled = true;
+        businessBtn.textContent = "Processing...";
+        isBusinessProcessRunning = true;
+
+        const jobId = localStorage.getItem("businessProcessJobId");
+        if (jobId) pollLogs(jobId, "business");
     }
 });

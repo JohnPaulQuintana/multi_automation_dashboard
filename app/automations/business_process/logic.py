@@ -10,16 +10,16 @@ import json
 import os
 
 
-def delete_json(job_id, filepath="json/result.json"):
-    try:
-        if os.path.exists(filepath):
-            os.remove(filepath)
-            print(f"✅ Deleted {filepath} after successful automation.")
-            log(job_id, f"✅ Deleted {filepath} after successful automation.")
-            debug_line()
-    except Exception as e:
-        log(job_id, f"❌ Error deleting {filepath}: {e}")
-        print(f"❌ Error deleting {filepath}: {e}")
+# def delete_json(job_id, filepath="json/result.json"):
+#     try:
+#         if os.path.exists(filepath):
+#             os.remove(filepath)
+#             print(f"✅ Deleted {filepath} after successful automation.")
+#             log(job_id, f"✅ Deleted {filepath} after successful automation.")
+#             debug_line()
+#     except Exception as e:
+#         log(job_id, f"❌ Error deleting {filepath}: {e}")
+#         print(f"❌ Error deleting {filepath}: {e}")
 
 
 async def run(job_id, data: BusinessAutomationInput):
@@ -46,9 +46,11 @@ async def run(job_id, data: BusinessAutomationInput):
 
         if not (result and isinstance(result, dict) and "status" in result and result["status"] == 200):
                 raise ValueError(f"Scraping failed: {result['text', 'No error message provided']}")
-        print("Scraping Completed Successfully")
+        log(job_id, "Scraping Completed Successfully")
         log(job_id, "✅ Scraping and data saving completed successfully.")
-        log(job_id, f"Merged Results: {json.dumps(result.get('data'), indent=2)}")
+
+        log(job_id, "Fetching data for spreadsheet processing.")
+        # log(job_id, f"Merged Results: {json.dumps(result.get('data'), indent=2)}") Checking Result in Terminal or Log
 
         spreadsheet = Spreadsheet(
             data.brand,
@@ -59,6 +61,9 @@ async def run(job_id, data: BusinessAutomationInput):
             data=result.get('data')
         )
         gs = spreadsheet.transfer(job_id)
+        if not (gs and isinstance(gs, dict) and "status" in gs and gs["status"] == 200):
+                raise ValueError(f"Scraping failed: {gs['text', 'No error message provided']}")
+        log(job_id, "Fetching Completed Successfully")
     except Exception as e:
         # Handle errors that occurred during the process
         print(f"❌ Error: {e}")

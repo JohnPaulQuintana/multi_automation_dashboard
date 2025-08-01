@@ -39,10 +39,9 @@ class Spreadsheet:
         # service_account_file = os.path.join(os.path.dirname(__file__), "BI-Gcredentials.json")
         self.creds = Credentials.from_service_account_info(config_dict, scopes=self.scope)
         self.service = build("sheets", "v4", credentials=self.creds)
-        self.links = { # Replace Beta-Test Link if need's Testing
+        self.links = { # Original Links
             "BAJI": {
-                # "BDT": "https://docs.google.com/spreadsheets/d/152CJzozRocf7DD8DCf949zIbq-7SWJtHIZU2aCAbHxE/edit?gid=0#gid=0",
-                "BDT": "https://docs.google.com/spreadsheets/d/1bisw2oX8OdpO1idTBtAh-Q_Ui-clGJ6qOvuu8ZmRD2E/edit?gid=0#gid=0",
+                "BDT": "https://docs.google.com/spreadsheets/d/152CJzozRocf7DD8DCf949zIbq-7SWJtHIZU2aCAbHxE/edit?gid=0#gid=0",
                 "INR": "https://docs.google.com/spreadsheets/d/1O3eM2QA_WQOk4Jeb-rOmBj89kq3Ugyo3jzvLxFd0gOg/edit?gid=0#gid=0",
                 "PKR": "https://docs.google.com/spreadsheets/d/1vBejYz8pBUTmoFD6444WoEEJQG40rxT-bLDhjKLB4ik/edit?gid=0#gid=0",
                 "NPR": "https://docs.google.com/spreadsheets/d/1kxn12rsQEIwo_vhy9pW8_aFf1QTiP2QV8YShx3nk5_Q/edit?gid=0#gid=0"
@@ -63,6 +62,31 @@ class Spreadsheet:
                 "SGD": "https://docs.google.com/spreadsheets/d/1IZP_lf9Sj_pCUAMt3frFtt04zBoRiovjcUeDSZRZJ0Y/edit?gid=0#gid=0",
                 "HKD": "https://docs.google.com/spreadsheets/d/1MKQYxOTYfDiWi1XAU5bEsenfQ_v3UWk7xzLE-Dmau08/edit?gid=0#gid=0",
                 "MYR": "https://docs.google.com/spreadsheets/d/1Z4J3CSaGcN-DuLnmir6h3LZW0LfIeN_PNiN3dfNve0Q/edit?gid=0#gid=0"
+            }
+        }
+        self.test_links = { # Replace Beta-Test Link if need's Testing
+            "BAJI": { # Change for Real Googlesheet URL (Beta Testing URL)
+                "BDT": "https://docs.google.com/spreadsheets/d/1bisw2oX8OdpO1idTBtAh-Q_Ui-clGJ6qOvuu8ZmRD2E/edit?gid=0#gid=0",
+                "INR": "https://docs.google.com/spreadsheets/d/1L6GoN7NDi1TSbjNmFPW97lS2VOSpVrI79cpZ-iuLm-k/edit?gid=0#gid=0",
+                "PKR": "https://docs.google.com/spreadsheets/d/1nsfXw4PoxeFUHDHszcxpRDWZ-wGpIb-kTxJzCfqlpUM/edit?gid=0#gid=0",
+                "NPR": "https://docs.google.com/spreadsheets/d/1St0u8qCPyFjJBowWWg20N4jsH8hDgnNMsFu3fHmYwVA/edit?gid=0#gid=0"
+            },
+            "S6": {
+                "BDT": "https://docs.google.com/spreadsheets/d/11yjjGFjKeodndLVqUPOpIkMnB_02MmdPwIKuaMZiWY8/edit?gid=0#gid=0",
+                "INR": "https://docs.google.com/spreadsheets/d/1kkFV_sNPJ3QBpfobZx_JmKw5fYgwm24U4Vbyaxj7Zwg/edit?gid=0#gid=0",
+                "PKR": "https://docs.google.com/spreadsheets/d/19WOHV3OmhYMSg4PF05lDFvR-6zOB6NuA6m8MOZXIibA/edit?gid=0#gid=0"
+            },
+            "JB": {
+                "BDT": "https://docs.google.com/spreadsheets/d/11V2OiSw_ztEKd1oKnTjT5YHMhmZnknFtEGI_TXSTDuQ/edit?gid=0#gid=0",
+                "INR": "https://docs.google.com/spreadsheets/d/1pbnM95UhA0aIxoRaJlekqjHSTFsxZcXIyRVb_tJgfts/edit?gid=0#gid=0",
+                "PKR": "https://docs.google.com/spreadsheets/d/10u4d6qu1pzpHgpdBKyuC9JNq69sIThnRuExl2TU7_YU/edit?gid=0#gid=0"
+            },
+            "CTN": {
+                "AUD": "https://docs.google.com/spreadsheets/d/11n97ZKv7rqZGalln40SeDaLZLl1dVv00I6hu2KzbGsA/edit?gid=0#gid=0",
+                "CNY": "https://docs.google.com/spreadsheets/d/1X-g2-SgVS7uf1UT75bScyB8GXCom8R1DiUSiFlLA8Ls/edit?gid=0#gid=0",
+                "SGD": "https://docs.google.com/spreadsheets/d/1na6cF9arI2l25b1WSv9xx0C7CJyoyR-lqE8TKBqCdN8/edit?gid=0#gid=0",
+                "HKD": "https://docs.google.com/spreadsheets/d/11ftPVIHH9dKojowsujyqlWDjg5wNrKRzn7v01pbesLg/edit?gid=0#gid=0",
+                "MYR": "https://docs.google.com/spreadsheets/d/126DJVMzl5od8NDFnZMb9m2J80n5GGSV72PKZqm1C8-o/edit?gid=0#gid=0"
             }
         }
     
@@ -360,7 +384,7 @@ class Spreadsheet:
             data = self.json_data
             sorted_dates = sorted(data.keys(), reverse=True)
 
-            spreadsheet_url = self.links[self.brand][self.currency]
+            spreadsheet_url = self.test_links[self.brand][self.currency]
             parser = GoogleSheetURLParser(spreadsheet_url)
             spreadsheet_id = parser.get_spreadsheet_id()
 
@@ -407,7 +431,7 @@ class Spreadsheet:
                 raw_date = raw_date.lstrip("'")
                 date_object = datetime.strptime(raw_date.split(" ")[0], "%Y-%m-%d")
                 formatted_date = date_object.strftime("%d/%m/%Y")
-                print(formatted_date)
+                log(job_id, formatted_date)
                 column_index = start_col + i
 
                 # Insert new column
@@ -439,7 +463,7 @@ class Spreadsheet:
                 log(job_id, f"✅ Column {column_index} updated with header and {len(update_requests)} data points")
 
             return {
-                "status": "200",
+                "status": 200,
                 "text": "Data Successfully Fetch"
                 
             }
