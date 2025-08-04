@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse,JSONResponse,RedirectResponse
 from app.services.google_auth import verify_token
 from app.utils.session import create_session_cookie, COOKIE_NAME
 from app.dependencies.auth import auth_required
+from datetime import datetime
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -53,6 +54,7 @@ def dashboard(request: Request, user=Depends(auth_required)):
         {
             "request": request,
             "user": user,
+            "version": int(datetime.utcnow().timestamp())
         }
     )
 

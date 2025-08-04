@@ -6,6 +6,8 @@ multi_automation_dashboard/
 │   └── styles.css
 │   └── fabicon_ico
 │   └── js
+│   │   ├── business_process/
+│   │   │   └── filter.js
 │   │   └── auth.js
 │   │   └── automation.js
 ├── app/
@@ -17,6 +19,10 @@ multi_automation_dashboard/
 │   │   └── conversion
 │   │   │   └── AcquisitionController.py
 │   │   │   └── SpreadSheetController.py
+│   │   └── business_process/
+│   │       ├── sql/
+│   │       ├── businessSpreadsheet.py
+│   │       └── supersetScraping.py
 |   ├── debug/
 │   │   └── line.py = printing line and title
 |   ├── constant/
@@ -39,10 +45,14 @@ multi_automation_dashboard/
 │   ├── automations/
 │   │   ├── conversion/
 │   │   │   ├── logic.py
-│   │   │   ├── routes.py
+│   │   │   └── routes.py
 │   │   ├── media/
 │   │   │   ├── logic.py
-│   │   │   ├── routes.py
+│   │   │   └── routes.py
+│   │   └── business_process/
+│   │       ├── logic.py
+│   │       └── routes.py
+│   │       └── schema.py
 │   └── templates/
 │   |   └── partials
 │   │   │   ├── _header.html

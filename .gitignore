@@ -1,8 +1,12 @@
-env
-backup
-**/__pycache__/
-*.py[cod]
-*.pyo
+# Ignore virtual environments and backups
+env/
+.env
+backup/
+
+# Ignore Python cache and compiled files
+__pycache__/
 *.pyc
 *.pyd
 *.pdb
+*.pyo
+*.py[cod]

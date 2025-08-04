@@ -1,10 +1,12 @@
 let isConversionRunning = false;
 let isSocialMediaRunning = false;
 let isBusinessProcessRunning = false;
+let isNsuFtdTrackerRunning = false;
 
 const conversionBtn = document.getElementById("conversionBtn");
 const mediaBtn = document.getElementById("mediaBtn");
 const businessBtn = document.getElementById("businessBtn");
+const nsuftdBtn = document.getElementById("nsuftdBtn");
 const logPanel = document.getElementById("job-log-panel");
 const logContent = document.getElementById("job-log-content");
 
@@ -48,10 +50,13 @@ const interval = setInterval(async () => {
         localStorage.removeItem("socialMediaJobId");
         localStorage.removeItem("businessProcessRunning");
         localStorage.removeItem("businessProcessJobId");
+        localStorage.removeItem("nsuFtdTrackerRunning");
+        localStorage.removeItem("nsuFtdTrackerJobId");
 
         isConversionRunning = false;
         isSocialMediaRunning = false;
         isBusinessProcessRunning = false;
+        isNsuFtdTrackerRunning = false;
 
         conversionBtn.disabled = false;
         conversionBtn.textContent = "Start Conversion";
@@ -61,6 +66,9 @@ const interval = setInterval(async () => {
 
         businessBtn.disabled = false;
         businessBtn.textContent = "Start Process";
+
+        nsuftdBtn.disabled = false;
+        nsuftdBtn.textContent = "Start Tracker";
     }
 
     } catch (err) {
@@ -147,7 +155,7 @@ const startSocialMediaAutomation = async () => {
     }
 };
 
-
+// Business Process Button Action
 const startBusinessProcessAutomation = async (formData) => {
     if (isBusinessProcessRunning || localStorage.getItem("businessProcessRunning") === "true") {
         console.log("Business Process is already running.")
@@ -198,6 +206,36 @@ const startBusinessProcessAutomation = async (formData) => {
     }
 };
 
+// NSU/FTD Tracker Button Action
+const StartNsuFtdTrackerAutomation = async () => {
+    if (isNsuFtdTrackerRunning || localStorage.getItem("nsuFtdTrackerRunning" === "true")) {
+        console.log("NSU/FTD Tracker Process is Already Running...")
+    }
+
+    isNsuFtdTrackerRunning = true;
+    localStorage.setItem("nsuFtdTrackerRunning", "true");
+
+    nsuftdBtn.disabled = true;
+    nsuftdBtn.textContent = "Processing...";
+
+    try {
+        const res = await fetch("/api/v1/tracker/start", {
+            method: "POST"
+        });
+        const data = await res.json();
+        console.log("NSU/FTD Tracker Done: ", data);
+
+        if(data.job_id) {
+            localStorage.setItem("nsuFtdTrackerJobId", data.job_id);
+            pollLogs(data.job_id, "tracker")
+        }
+    } catch (err) {
+        console.error("NSU/FTD Tracker Error: ", err);
+        console.error("NSu/FTD Tracker Automation Failed.");
+        localStorage.removeItem("nsuFtdTrackerRunning")
+    }
+};
+
 // On page load
 window.addEventListener("DOMContentLoaded", () => {
     const conversionRunning = localStorage.getItem("conversionRunning") === "true";
@@ -230,5 +268,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
         const jobId = localStorage.getItem("businessProcessJobId");
         if (jobId) pollLogs(jobId, "business");
+    }
+
+    if (isNsuFtdTrackerRunning) {
+        nsuftdBtn.disabled = true;
+        nsuftdBtn.textContent = "Processing...";
+        isNsuFtdTrackerRunning = true;
+
+        const jobId = localStorage.getItem("nsuFtdTrackerJobId");
+        if (jobId) pollLogs(jobId, "tracker");
     }
 });

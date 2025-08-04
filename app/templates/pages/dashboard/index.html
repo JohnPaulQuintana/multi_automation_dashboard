@@ -34,7 +34,7 @@
 
             <!-- Tab Content -->
             <div id="d-tab-content" class="flex-1 overflow-y-auto p-2 md:p-4">
-                <!-- Automation 1 -->
+                <!-- Conversion Automation 1 -->
                 <div x-show="$store.tab === 'conversion_automation'" x-transition class="flex items-center justify-between">
                 <h2 class="text-xl font-bold">Conversion Automation</h2>
                     <button
@@ -46,7 +46,7 @@
                     </button>
                 </div>
 
-                <!-- Automation 2 -->
+                <!-- Social Media Automation 2 -->
                 <div x-show="$store.tab === 'social_media_automation'" x-transition class="flex items-center justify-between">
                     <h2 class="text-xl font-bold">Social Media Automation</h2>
                     <button
@@ -58,7 +58,7 @@
                     </button>
                 </div>
 
-                <!-- Business-Process Automation -->
+                <!-- Business-Process Automation 3 -->
                 <div x-show="$store.tab === 'business_process_automation'" x-transition class="p-6 bg-white rounded-xl shadow-md space-y-6" x-data="businessAutomation">
                     <h2 class="text-xl font-bold">Business Process Automation</h2>
                     <div class="flex flex-wrap items-end gap-4">
@@ -120,8 +120,26 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- FTD/NSU Tracker Automation -->
+                <div x-show="$store.tab === 'nsu_ftd_tracker_automation'" x-transition class="flex items-center justify-between">
+                <h2 class="text-xl font-bold">NSU/FTD Tracker Automation</h2>
+                    <button
+                    id="nsuftdBtn"
+                    onclick="StartNsuFtdTrackerAutomation()"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                    >
+                    <i data-lucide="play" class="inline w-4 h-4 mr-2"></i> Start
+                    </button>
+                </div>
+
                 <!-- Job Log Panel -->
-                <div x-show="$store.tab === 'social_media_automation' || $store.tab === 'conversion_automation' || $store.tab === 'business_process_automation'" x-transition id="job-log-panel" class="mt-6 bg-gray-900 rounded-md shadow-lg h-[calc(100vh-160px)] overflow-y-auto border border-gray-700">
+                <div x-show="
+                    $store.tab === 'social_media_automation' || $store.tab === 'conversion_automation' || 
+                    $store.tab === 'business_process_automation' || $store.tab === 'nsu_ftd_tracker_automation'" 
+                    x-transition id="job-log-panel" 
+                    class="mt-6 bg-gray-900 rounded-md shadow-lg h-[calc(100vh-160px)] overflow-y-auto border border-gray-700
+                    ">
                     <div class="flex justify-between items-center p-3 border-b border-gray-700">
                         <h2 class="text-sm font-semibold text-green-400 tracking-wide">Automation Logs</h2>
                         <button
@@ -190,8 +208,8 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <!-- inject automation js handler -->
-<script src="/static/js/automation.js"></script>
+<script src="/static/js/automation.js?v={{ version }}"></script>
 
 <!-- Inject Filter on the Business Process -->
-<script src="/static/js/business_process/filter.js"></script>
+<script src="/static/js/business_process/filter.js?v={{ version }}"></script>
 {% endblock %}

@@ -40,6 +40,14 @@
     >
       <i data-lucide="briefcase-business" class="w-4 h-4 inline-block mr-2"></i> Business Process
     </button>
+
+    <button
+      @click="$store.tab = 'nsu_ftd_tracker_automation'"
+      class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
+      :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'nsu_ftd_tracker_automation' }"
+    >
+      <i data-lucide="clipboard-clock" class="w-4 h-4 inline-block mr-2"></i> NSU/FTD Tracker
+    </button>
   </div>
 
 

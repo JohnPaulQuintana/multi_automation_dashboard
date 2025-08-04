@@ -19,6 +19,9 @@ AFFILIATE_SHEET_ID = os.getenv("AFFILIATE_SHEET", "")
 SS_USERNAME = os.getenv("SS_USERNAME", "")
 SS_PASSWORD = os.getenv("SS_PASSWORD", "")
 
+# NSU AND FTD Tracker Automation
+NSU_FTD_TRACKER_SHEET = os.getenv("NSU_FTD_TRACKER_SHEET")
+
 TYPE = os.getenv("TYPE")
 PROJECT_ID = os.getenv("PROJECT_ID")
 PRIVATE_KEY_ID = os.getenv("PRIVATE_KEY_ID")

@@ -5,6 +5,7 @@ from app.core import base_router
 from app.automations.conversion import routes as coversion_routes
 from app.automations.media import routes as media_routes
 from app.automations.business_process import routes as business_routes
+from app.automations.tracker import routes as nsuftd_tracker
 
 origins = [
     "http://localhost:8000",
@@ -25,5 +26,6 @@ app.include_router(base_router.router)
 app.include_router(coversion_routes.router, prefix="/api/v1/conversion")
 app.include_router(media_routes.router, prefix="/api/v1/media")
 app.include_router(business_routes.router, prefix="/api/v1/business")
+app.include_router(nsuftd_tracker.router, prefix="/api/v1/tracker")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
