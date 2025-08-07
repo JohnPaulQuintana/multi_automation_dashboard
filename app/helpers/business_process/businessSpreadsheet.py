@@ -4,8 +4,8 @@ from app.config.loader import TYPE,PROJECT_ID,PRIVATE_KEY_ID,PRIVATE_KEY,CLIENT_
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2.service_account import Credentials
-from app.helpers.business_process.spreadsheet_extractor import GoogleSheetURLParser
-from app.helpers.business_process.key_mapping import key_daily_map, key_weekly_map, key_monthly_map, jb_monthly_map
+from app.controllers.business_process.spreadsheet_extractor import GoogleSheetURLParser
+from app.controllers.business_process.key_mapping import key_daily_map, key_weekly_map, key_monthly_map, jb_monthly_map
 from app.automations.log.state import log
 from datetime import datetime
 import time

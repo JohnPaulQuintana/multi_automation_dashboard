@@ -21,7 +21,8 @@ multi_automation_dashboard/
 │   │   │   └── spreadsheet_controller.py
 │   │   └── business_process/
 │   │       ├── sql/
-│   │       ├── business_spreadsheet.py
+│   │       ├── key_mapping.py
+│   │       ├── spreadsheet_extractor.py
 │   │       └── superset_scraping.py
 │   ├── debug/
 │   │   └── line.py
@@ -33,6 +34,8 @@ multi_automation_dashboard/
 │   │   ├── conversion/
 │   │   │   ├── conversion.py # conversion helpers
 │   │   │   └── spreadsheet.py # conversion helpers
+│   │   ├── business_process/
+│   │   │   └── businessSpreadsheet.py # business_process helpers
 │   │   └── template.py # initialize templates
 │   ├── services/
 │   │   └── google_auth.py # verify the token request and return (email,picture,name)

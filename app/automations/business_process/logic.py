@@ -2,7 +2,7 @@ from app.config.loader import SS_USERNAME, SS_PASSWORD
 from app.constant.conversion import YESTERDAY,TARGET_DATE,SHEET_DATE,SOCIAL_RANGES,AFFILIATE_RANGES
 from app.debug.line import debug_line, debug_title
 from app.controllers.business_process.supersetScraping import supersetScraping
-from app.controllers.business_process.businessSpreadsheet import Spreadsheet
+from app.helpers.business_process.businessSpreadsheet import Spreadsheet
 from app.helpers.conversion.spreadsheet import SpreadsheetController as Sheet
 from .schema import BusinessAutomationInput
 from app.automations.log.state import log  # ✅ import from new file
