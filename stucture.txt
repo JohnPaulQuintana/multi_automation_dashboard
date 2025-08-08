@@ -19,6 +19,9 @@ multi_automation_dashboard/
 │   │   ├── conversion/
 │   │   │   ├── acquisition_controller.py
 │   │   │   └── spreadsheet_controller.py
+│   │   ├── tracker/ # NSU/FTD Tracker
+│   │   │   ├── AffiliateController.py
+│   │   │   └── SpreadSheetController.py
 │   │   └── business_process/
 │   │       ├── sql/
 │   │       ├── key_mapping.py
@@ -27,7 +30,8 @@ multi_automation_dashboard/
 │   ├── debug/
 │   │   └── line.py
 │   ├── constant/
-│   │   └── conversion.py # all the constant
+│   │   ├── conversion.py # all the constant
+│   │   └── tracker.py # NSU/FTD Tracker constant
 │   ├── dependencies/
 │   │   └── auth.py # check authenticated users using Depend
 │   ├── helpers/
@@ -36,6 +40,8 @@ multi_automation_dashboard/
 │   │   │   └── spreadsheet.py # conversion helpers
 │   │   ├── business_process/
 │   │   │   └── businessSpreadsheet.py # business_process helpers
+│   │   ├── tracker/
+│   │   │   └── trackerSpreadsheet.py # NSU/FTD Tracker helpers
 │   │   └── template.py # initialize templates
 │   ├── services/
 │   │   └── google_auth.py # verify the token request and return (email,picture,name)
@@ -50,6 +56,9 @@ multi_automation_dashboard/
 │   │   │   ├── logic.py
 │   │   │   └── routes.py
 │   │   ├── media/
+│   │   │   ├── logic.py
+│   │   │   └── routes.py
+│   │   ├── tracker/
 │   │   │   ├── logic.py
 │   │   │   └── routes.py
 │   │   └── business_process/
