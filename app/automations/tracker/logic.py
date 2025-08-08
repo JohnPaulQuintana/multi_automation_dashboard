@@ -6,11 +6,13 @@ from app.debug.line import debug_line, debug_title
 from app.controllers.tracker.SpreadSheetController import SpreadsheetController
 from app.controllers.tracker.AffiliateController import AffiliateController
 # from app.helpers.conversion.spreadsheet import SpreadsheetController as Sheet
+from app.helpers.tracker.TrackerSpreadsheet import spreadsheet
 from app.automations.log.state import log  # ✅ import from new file
+from datetime import datetime, timedelta
 import threading
 
 
-def process_sheet(job_id, sheet_id, range, startDate, endDate):
+def process_sheet(job_id, sheet_id, range, date):
     try:
         log(job_id, "Processing USER SHEETS")
         # Fetch and sort accounts
@@ -37,7 +39,7 @@ def process_sheet(job_id, sheet_id, range, startDate, endDate):
             username = row[1].strip()
             password = row[2].strip()
             currency = row[3].strip()
-            platform = row[4].strip()
+            platform = row[5].strip()
             login_url = brand_urls[brand]
 
             data = AffiliateController(
@@ -47,16 +49,12 @@ def process_sheet(job_id, sheet_id, range, startDate, endDate):
                 password,
                 currency,
                 platform,
-                startDate,
-                endDate,
+                date,
             )
             result = data.run(job_id)
             all_data.extend(
                 result
             )
-
-            #COMMENTED FOR NOW THIS IS FOR TRANSFERRING TO SHEET
-            log(job_id, f" Writing rows to spreadsheet…")
 
         return all_data
 
@@ -75,14 +73,37 @@ def run(job_id):
     debug_title("Running Tracker...")
     # print(YESTERDAY,TARGET_DATE,SHEET_DATE,SOCIAL_RANGES,AFFILIATE_RANGES)
     debug_line()
+    today = datetime.today()
 
-    all_data = process_sheet(
-        job_id,
-        NSU_FTD_TRACKER_SHEET, TRACKER_RANGE["USER"], START_DATE, END_DATE
-    )
+    if today.weekday() == 0: #monday=0, sunday=6
+        # Last Friday, Saturday, Sunday
+        dates_to_process = [
+            today - timedelta(days=3),  # Friday
+            today - timedelta(days=2),  # Saturday
+            today - timedelta(days=1)   # Sunday
+        ]
+    else:
+        # Just yesterday
+        dates_to_process = [today - timedelta(days=1)]
+    
+    for date in dates_to_process:
+        date_str = date.strftime("%m/%d/%Y")
 
-    for row in all_data:
-        log(job_id, row)
-    log(job_id, "Scraping Process Finished")    
+        all_data = process_sheet(
+            job_id,
+            NSU_FTD_TRACKER_SHEET, TRACKER_RANGE["USER"], date_str,
+        )
+
+        for row in all_data:
+            log(job_id, row)
+        
+        log(job_id, "Scraping Process Finished")    
+
+        #COMMENTED FOR NOW THIS IS FOR TRANSFERRING TO SHEET
+        log(job_id, f" Writing rows to spreadsheet…")
+        gs = spreadsheet (
+            all_data,
+            NSU_FTD_TRACKER_SHEET, TRACKER_RANGE
+        ).transfer(job_id)
 
     log(job_id, "✅ Job complete")

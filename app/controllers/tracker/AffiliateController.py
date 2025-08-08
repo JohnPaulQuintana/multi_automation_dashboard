@@ -7,15 +7,14 @@ import re
 import time
 
 class AffiliateController:
-    def __init__(self, login_url, brand, username, password, currency, platform, startDate, endDate,):
+    def __init__(self, login_url, brand, username, password, currency, platform, rangeDate):
         self.url = login_url
         self.brand = brand
         self.username = username
         self.password = password
         self.currency = currency
         self.platform = platform
-        self.startDate = startDate
-        self.endDate = endDate
+        self.startDate = rangeDate
         self.max_retries = 3
 
         parsed_url = urlparse(self.url)
@@ -43,7 +42,7 @@ class AffiliateController:
             original_dt = datetime.strptime(datetime_part, "%Y/%m/%d %H:%M:%S")
             offset = timedelta(hours=offset_hour, minutes=offset_minute)
             local_dt = original_dt - offset + timedelta(hours=8)  # Convert to Asia/Manila (GMT+8)
-            return local_dt.strftime("%B %d, %Y")
+            return local_dt.strftime("%m/%d/%Y")
         except:
             return None
     
@@ -95,15 +94,15 @@ class AffiliateController:
     
     def extract_table_data(self, page, job_id):
         # ====== Scraping For NSU =========
+        rangeDate = datetime.strptime(self.startDate, "%m/%d/%Y").strftime("%Y-%m-%d")
         try:
-            originaldate = self.startDate
-            log(job_id, f"original Date: {originaldate}")
+            log(job_id, f"original Date: {self.startDate}")
             # formatted_date = originaldate.replace('/','-')
-            formatted_date = "2025-07-29"
-            log(job_id, f"format Date: {formatted_date}")
-            page.fill("//*[@id=\"registrationsForm\"]/div/div[2]/div[2]/div[1]/input", formatted_date)
+            # formatted_date = "2025-07-29"
+            log(job_id, f"Date Format: {rangeDate}")
+            page.fill("//*[@id=\"registrationsForm\"]/div/div[2]/div[2]/div[1]/input", rangeDate)
             time.sleep(1)
-            page.fill("//*[@id=\"registrationsForm\"]/div/div[2]/div[2]/div[2]/input", formatted_date)
+            page.fill("//*[@id=\"registrationsForm\"]/div/div[2]/div[2]/div[2]/input", rangeDate)
 
             log(job_id, "Filled successfully for input date.")
         except PlaywrightTimeoutError:
@@ -139,17 +138,11 @@ class AffiliateController:
             page.wait_for_load_state('networkidle')
             time.sleep(3)
 
-        originaldate = self.startDate
-        
-        
         page.wait_for_selector('input[name="startTime"]', state='visible')
-        log(job_id, f"original Date: {originaldate}")
-        # formatted_date = originaldate.replace('/','-')
-        formatted_date = "2025-07-29"
-        log(job_id, f"format Date: {formatted_date}")
-        page.fill("//*[@id=\"performanceForm\"]/div[3]/div[1]/input", formatted_date)
+ 
+        page.fill("//*[@id=\"performanceForm\"]/div[3]/div[1]/input", rangeDate)
         time.sleep(1)
-        page.fill("//*[@id=\"performanceForm\"]/div[3]/div[2]/input", formatted_date)
+        page.fill("//*[@id=\"performanceForm\"]/div[3]/div[2]/input", rangeDate)
         log(job_id, "Filled successfully for input date.")
         time.sleep(1)
 
@@ -172,7 +165,8 @@ class AffiliateController:
         ftd_data = self.extract_keyword_ftd_only(page)
 
         # ======= Merging the Results ========
-        example_date = next(iter(data.values()))[1] if data else datetime.strptime(formatted_date, "%Y-%m-%d").strftime("%B %d, %Y")
+        example_date = next(iter(data.values()))[1] if data else datetime.strptime(rangeDate, "%Y-%m-%d").strftime("%m/%d/%Y")
+        
 
         combined_rows = []
         all_keywords = set(data.keys()) | set(ftd_data.keys())
@@ -180,10 +174,9 @@ class AffiliateController:
         for keyword in sorted(all_keywords):
             nsu = data.get(keyword, (0, example_date))[0]
             ftd = ftd_data.get(keyword, 0)
-            combined_rows.append((self.brand, self.username, keyword, nsu, ftd, example_date))
+            combined_rows.append((example_date, self.brand, self.username, self.currency, self.platform, keyword, nsu, ftd))
         if not combined_rows:
-            
-            combined_rows.append((self.brand, self.username, "-", 0, 0, example_date))
+            combined_rows.append((example_date, self.brand, self.username, self.currency, self.platform, "-", 0, 0))
 
         return combined_rows
         
@@ -198,7 +191,7 @@ class AffiliateController:
                 # Try using JavaScript to click the first menu button
                 page.wait_for_selector(menu_selector, timeout=10000)
                 page.eval_on_selector(f'xpath={menu_selector}', "element => element.click()")
-                log(job_id, "NSU button clicked using JavaScript.")
+                log(job_id, "Registration button clicked using JavaScript.")
             except PlaywrightTimeoutError:
                 log(job_id, "Failed to click the menu button using JavaScript.")
             
