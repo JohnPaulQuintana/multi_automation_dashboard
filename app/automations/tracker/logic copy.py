@@ -12,72 +12,56 @@ from datetime import datetime, timedelta
 import threading
 
 
-def process_brand(job_id, brand, accounts, brand_urls, date):
-    log(job_id, f"🚀 Starting brand: {brand}")
-    all_data = []
-
-    for row in accounts:
-        username = row[1].strip()
-        password = row[2].strip()
-        currency = row[3].strip()
-        platform = row[5].strip()
-        login_url = brand_urls[brand]
-
-        data = AffiliateController(
-            login_url,
-            brand,
-            username,
-            password,
-            currency,
-            platform,
-            date,
-        )
-        result = data.run(job_id)
-        all_data.extend(result)
-
-    log(job_id, f"✅ Finished brand: {brand} ({len(all_data)} records)")
-    return all_data
-
-def process_thread(job_id, sheet_id, range, date):
-    log(job_id, "Processing USER SHEETS")
-    gs = SpreadsheetController(sheet_id, range).get_account()
-    gs_sorted = sorted(gs, key=lambda row: row[0])
-
-    log(job_id, "Returned running accounts:")
+def process_sheet(job_id, sheet_id, range, date):
+    try:
+        log(job_id, "Processing USER SHEETS")
+        # Fetch and sort accounts
+        gs = SpreadsheetController(sheet_id, range).get_account()
+        gs_sorted = sorted(gs, key=lambda row: row[0])
+        log(job_id, "Returned running accounts:")
 
         # Process each row
-    brand_urls = {
-        "BAJI": "https://bajipartners.xyz/page/affiliate/login.jsp",
-        "JB": "https://jeetbuzzpartners.com/page/affiliate/login.jsp",
-        "6S": "https://6saffiliates.com/page/affiliate/login.jsp"
-    }
-    target_brands = brand_urls.keys()
+        brand_urls = {
+            "BAJI": "https://bajipartners.xyz/page/affiliate/login.jsp",
+            "JB": "https://jeetbuzzpartners.com/page/affiliate/login.jsp",
+            "6S": "https://6saffiliates.com/page/affiliate/login.jsp"
+        }
+        target_brands = brand_urls.keys()
+        all_data = []
+        for row in gs_sorted:
+            brand = row[0].strip()
 
-    # Group accounts by brand
-    accounts_by_brand = {brand: [] for brand in target_brands}
-    for row in gs_sorted:
-        brand = row[0].strip()
-        if brand in target_brands:
-            accounts_by_brand[brand].append(row)
-        else:
-            log(job_id, f"Brand not matched: {brand}")
-    
-    threads = []
-    results = []
-    def thread_runner(b):
-        data = process_brand(job_id, b, accounts_by_brand[b], brand_urls, date)
-        results.extend(data)
+            if brand not in target_brands:
+                log(job_id, f"Brand not matched: {brand}")
+                continue
 
-    for brand in target_brands:
-        if accounts_by_brand[brand]:
-            t = threading.Thread(target=thread_runner, args=(brand,))
-            threads.append(t)
-            t.start()
+            log(job_id, f"Processing Brand: {brand}")
+            username = row[1].strip()
+            password = row[2].strip()
+            currency = row[3].strip()
+            platform = row[5].strip()
+            login_url = brand_urls[brand]
 
-    for t in threads:
-        t.join()
+            data = AffiliateController(
+                login_url,
+                brand,
+                username,
+                password,
+                currency,
+                platform,
+                date,
+            )
+            result = data.run(job_id)
+            all_data.extend(
+                result
+            )
 
-    return results
+        return all_data
+
+    except Exception as e:
+            log(job_id, f"❌ ERROR in : {e}")
+            print(f" ERROR: {e}")
+
 
 def run(job_id):
     log(job_id, "🚀 Running Conversion Automation...")
@@ -105,7 +89,7 @@ def run(job_id):
     for date in dates_to_process:
         date_str = date.strftime("%m/%d/%Y")
 
-        all_data = process_thread(
+        all_data = process_sheet(
             job_id,
             NSU_FTD_TRACKER_SHEET, TRACKER_RANGE["USER"], date_str,
         )

@@ -48,26 +48,26 @@ def process_sheet(job_id, sheet_id, ranges, row_builder, row_builder_socmed, typ
 
             #COMMENTED FOR NOW THIS IS FOR TRANSFERRING TO SHEET
             print("Writing rows to spreadsheet…")
-            # log(job_id, f" Writing rows to spreadsheet…")
-            # rows = [row_builder(r, SHEET_DATE) for r in data_aff]
-            # sheet = Sheet(spreadsheet=dest_sheet, tab=tab_name, type=type)
-            # sheet.append_rows_return_last(rows, debug=True)
-            # log(job_id, f"✅ {brand}: {len(rows)} rows → {tab_name}")
-            # print("Done writing rows to spreadsheet.")
+            log(job_id, f" Writing rows to spreadsheet…")
+            rows = [row_builder(r, SHEET_DATE) for r in data_aff]
+            sheet = Sheet(spreadsheet=dest_sheet, tab=tab_name, type=type)
+            sheet.append_rows_return_last(rows, debug=True)
+            log(job_id, f"✅ {brand}: {len(rows)} rows → {tab_name}")
+            print("Done writing rows to spreadsheet.")
 
-            # if not data_soc:
-            #     log(job_id, f"{brand}: No SocialMedia rows")
-            #     print("No Social‑Media rows found")
-            # else:
-            #     log(job_id, f" {len(data_soc)} Social‑Media rows")
-            #     print(f"{len(data_soc)} Social‑Media rows")
-            #     rows2 = [row_builder_socmed(r, SHEET_DATE) for r in data_soc]
-            #     sheet2 = Sheet(spreadsheet=dest_sheet, tab="*Daily_Data (Aff)", type=type)
-            #     sheet2.append_rows_return_last(rows2, debug=True)
-            #     log(job_id, f"✅ {brand}: {len(rows2)} SocialMedia rows")
+            if not data_soc:
+                log(job_id, f"{brand}: No SocialMedia rows")
+                print("No Social‑Media rows found")
+            else:
+                log(job_id, f" {len(data_soc)} Social‑Media rows")
+                print(f"{len(data_soc)} Social‑Media rows")
+                rows2 = [row_builder_socmed(r, SHEET_DATE) for r in data_soc]
+                sheet2 = Sheet(spreadsheet=dest_sheet, tab="*Daily_Data (Aff)", type=type)
+                sheet2.append_rows_return_last(rows2, debug=True)
+                log(job_id, f"✅ {brand}: {len(rows2)} SocialMedia rows")
 
-            # print(f"{brand}: {len(rows)} rows → {tab_name}")
-            # log(job_id, f"✅ Processing {type} - {brand} completed...")
+            print(f"{brand}: {len(rows)} rows → {tab_name}")
+            log(job_id, f"✅ Processing {type} - {brand} completed...")
         except Exception as e:
             log(job_id, f"❌ ERROR in {brand}: {e}")
             print(f"{brand} ERROR: {e}")

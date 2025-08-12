@@ -45,8 +45,8 @@ class SpreadsheetController:
                     acount_info = row[:8]
                     running_accounts.append(acount_info)
                     # print("Running Account:", acount_info)
-                    if len(running_accounts) == 1:  # Stop after 3 running accounts
-                        break
+                    # if len(running_accounts) == 3:  # Stop after 3 running accounts
+                    #     break
 
             print(f"Found {len(running_accounts)} running accounts.")
             # print("Running Account: ", running_accounts)

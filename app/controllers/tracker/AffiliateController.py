@@ -46,23 +46,50 @@ class AffiliateController:
         except:
             return None
     
-    def extract_keyword_ftd_only(self, page):
+    def extract_keyword_ftd_only(self, page, rangeDate):
         keyword_counts = defaultdict(int)
         keyword_dates = {}
 
         # Wait for the table to load
         page.wait_for_selector("#performanceTable tbody tr")
 
-        rows = page.query_selector_all("#performanceTable tbody tr")
+        while True:
+            rows = page.query_selector_all("#performanceTable tbody tr")
+            for row in rows:
+                cells = row.query_selector_all("td")
+                if len(cells) < 3:
+                    continue
+                
+                datetime_text = cells[6].inner_text().strip()
+                date_only = datetime_text.split(" ")[0] # Strip the Time
 
-        for row in rows:
-            cells = row.query_selector_all("td")
-            if len(cells) < 3:
-                continue
+                date = datetime.strptime(rangeDate, "%Y-%m-%d").strftime("%Y/%m/%d")
+                if date_only != date:
+                    continue
+                keyword = cells[2].inner_text().strip()
+                keyword_counts[keyword] += 1
 
-            keyword = cells[2].inner_text().strip()
-            keyword_counts[keyword] += 1
- 
+            # Look for "Next" button
+            next_button = page.query_selector("#performanceTable_next")
+            if next_button and "disabled" not in next_button.get_attribute("class"):
+                first_row_text = page.query_selector(
+                    "#performanceTable tbody tr:first-child"
+                ).inner_text()
+
+                next_button.click()
+
+                try:
+                    page.wait_for_function(
+                        f"document.querySelector('#performanceTable tbody tr:first-child') && "
+                        f"document.querySelector('#performanceTable tbody tr:first-child').innerText !== {repr(first_row_text)}",
+                        timeout=8000
+                    )
+                except TimeoutError:
+                    print("Timed out waiting for next page load")
+                    break
+            else:
+                break
+
         return keyword_counts
 
     def extract_keyword_nsu_only(self, page):
@@ -72,25 +99,48 @@ class AffiliateController:
         # Wait for the table to load
         page.wait_for_selector("#registrationsTable tbody tr")
 
-        rows = page.query_selector_all("#registrationsTable tbody tr")
+        while True:
+            rows = page.query_selector_all("#registrationsTable tbody tr")
+            for row in rows:
+                cells = row.query_selector_all("td")
+                if len(cells) < 3:
+                    continue
 
-        for row in rows:
-            cells = row.query_selector_all("td")
-            if len(cells) < 3:
-                continue
+                keyword = cells[2].inner_text().strip()
+                reg_time_text = cells[4].inner_text().strip()
 
-            keyword = cells[2].inner_text().strip()
-            reg_time_text = cells[4].inner_text().strip()
+                # Parse and format the date
+                formatted_date = self.parse_display_date(reg_time_text)
+                keyword_dates[keyword] = formatted_date
 
-            # Parse and format the date
-            formatted_date = self.parse_display_date(reg_time_text)
-            keyword_dates[keyword] = formatted_date
+                keyword_counts[keyword] += 1
 
-            keyword_counts[keyword] += 1
+            # Check for the "Next" button
+            next_button = page.query_selector("#registrationsTable_next")
+            if next_button and "disabled" not in next_button.get_attribute("class"):
+                first_row_text = page.query_selector(
+                    "#registrationsTable tbody tr:first-child"
+                ).inner_text()
+
+                next_button.click()
+
+                try:
+                    page.wait_for_function(
+                        f"document.querySelector('#registrationsTable tbody tr:first-child') && "
+                        f"document.querySelector('#registrationsTable tbody tr:first-child').innerText !== {repr(first_row_text)}",
+                        timeout=8000
+                    )
+                except TimeoutError:
+                    print("Timed out waiting for next page load")
+                    break
+            else:
+                break
+
         result = {}
         for keyword, count in keyword_counts.items():
             result[keyword] = (count, keyword_dates.get(keyword))
         return result
+
     
     def extract_table_data(self, page, job_id):
         # ====== Scraping For NSU =========
@@ -109,7 +159,7 @@ class AffiliateController:
             log(job_id, "Failed to fill date input.")
                 
         self.wait_for_navigation(page, job_id)
-        time.sleep(2)
+        time.sleep(1)
 
         page.select_option('select[name="registrationsTable_length"]', value="100")
         log(job_id, "Selected 100 entries from the dropdown.")
@@ -147,22 +197,22 @@ class AffiliateController:
         time.sleep(1)
 
         self.wait_for_navigation(page, job_id)
-        time.sleep(2)
+        time.sleep(1)
 
         page.select_option('select[name="performanceTable_length"]', value="100")
         log(job_id, "Selected 100 entries from the dropdown.")
 
         try:
             self.wait_for_navigation(page, job_id)
-            time.sleep(2)
+            time.sleep(1)
             # return True
         except TimeoutError:
             # logging.warning(f"Tab trigger failed, retrying {retries + 1}/{self.max_retries}...")
                 # retries += 1
             time.sleep(3)
-        time.sleep(2)
+        time.sleep(1)
 
-        ftd_data = self.extract_keyword_ftd_only(page)
+        ftd_data = self.extract_keyword_ftd_only(page, rangeDate)
 
         # ======= Merging the Results ========
         example_date = next(iter(data.values()))[1] if data else datetime.strptime(rangeDate, "%Y-%m-%d").strftime("%m/%d/%Y")
