@@ -132,13 +132,25 @@
                     >
                     <i data-lucide="play" class="inline w-4 h-4 mr-2"></i> Start
                     </button>
-                
+                </div>
+
+                <!-- Badsha Report Automation -->
+                <div x-show="$store.tab === 'badsha_report_automation'" x-transition class="flex items-center justify-between">
+                <h2 class="text-xl font-bold">Badsha Report Automation</h2>
+                    <button
+                    id="badshaBtn"
+                    onclick="BadshaReportAutomation()"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                    >
+                    <i data-lucide="play" class="inline w-4 h-4 mr-2"></i> Start
+                    </button>
                 </div>
 
                 <!-- Job Log Panel -->
                 <div x-show="
                     $store.tab === 'social_media_automation' || $store.tab === 'conversion_automation' || 
-                    $store.tab === 'business_process_automation' || $store.tab === 'nsu_ftd_tracker_automation'" 
+                    $store.tab === 'business_process_automation' || $store.tab === 'nsu_ftd_tracker_automation' ||
+                    $store.tab === 'badsha_report_automation'" 
                     x-transition id="job-log-panel" 
                     class="mt-6 bg-gray-900 rounded-md shadow-lg h-[calc(100vh-160px)] overflow-y-auto border border-gray-700
                     ">

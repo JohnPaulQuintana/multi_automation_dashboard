@@ -2,11 +2,13 @@ let isConversionRunning = false;
 let isSocialMediaRunning = false;
 let isBusinessProcessRunning = false;
 let isNsuFtdTrackerRunning = false;
+let isBadshaReportRunning = false;
 
 const conversionBtn = document.getElementById("conversionBtn");
 const mediaBtn = document.getElementById("mediaBtn");
 const businessBtn = document.getElementById("businessBtn");
 const nsuftdBtn = document.getElementById("nsuftdBtn");
+const badshaBtn = document.getElementById("badshaBtn")
 const logPanel = document.getElementById("job-log-panel");
 const logContent = document.getElementById("job-log-content");
 
@@ -52,11 +54,14 @@ const interval = setInterval(async () => {
         localStorage.removeItem("businessProcessJobId");
         localStorage.removeItem("nsuFtdTrackerRunning");
         localStorage.removeItem("nsuFtdTrackerJobId");
+        localStorage.removeItem("badshaReportRunning");
+        localStorage.removeItem("badshaReportJobId");
 
         isConversionRunning = false;
         isSocialMediaRunning = false;
         isBusinessProcessRunning = false;
         isNsuFtdTrackerRunning = false;
+        isBadshaReportRunning = false;
 
         conversionBtn.disabled = false;
         conversionBtn.textContent = "Start Conversion";
@@ -69,6 +74,9 @@ const interval = setInterval(async () => {
 
         nsuftdBtn.disabled = false;
         nsuftdBtn.textContent = "Start Tracker";
+
+        badshaBtn.disabled = false;
+        badshaBtn.textContent = "Start Badsha"
     }
 
     } catch (err) {
@@ -208,8 +216,9 @@ const startBusinessProcessAutomation = async (formData) => {
 
 // NSU/FTD Tracker Button Action
 const StartNsuFtdTrackerAutomation = async () => {
-    if (isNsuFtdTrackerRunning || localStorage.getItem("nsuFtdTrackerRunning" === "true")) {
+    if (isNsuFtdTrackerRunning || localStorage.getItem("nsuFtdTrackerRunning") === "true") {
         console.log("NSU/FTD Tracker Process is Already Running...")
+        return;
     }
 
     isNsuFtdTrackerRunning = true;
@@ -229,6 +238,8 @@ const StartNsuFtdTrackerAutomation = async () => {
             localStorage.setItem("nsuFtdTrackerJobId", data.job_id);
             pollLogs(data.job_id, "tracker")
         }
+        console.log("NSU/FTD Tracker started successfully.");
+        localStorage.removeItem("nsuFtdTrackerRunning");
     } catch (err) {
         console.error("NSU/FTD Tracker Error: ", err);
         console.error("NSu/FTD Tracker Automation Failed.");
@@ -236,11 +247,44 @@ const StartNsuFtdTrackerAutomation = async () => {
     }
 };
 
+// Badsha Report Automation / BO FTD NSU
+const BadshaReportAutomation = async () => {
+    if (isBadshaReportRunning || localStorage.getItem("badshaReportRunning") === "true") {
+        console.log("Badsha Report Process is Already Running...")
+        return;
+    }
+    isBadshaReportRunning = true;
+    localStorage.setItem("badshaReportRunning", "true");
+
+    badshaBtn.disabled = true;
+    badshaBtn.textContent = "Processing...";
+
+    try {
+        const res = await fetch("/api/v1/badsha/start", {
+            method: "POST"
+        });
+        const data = await res.json();
+        console.log("Badsha Report Done: ", data);
+        
+        if (data.job_id) {
+            localStorage.setItem("badshaReportJobId", data.job_id);
+            pollLogs(data.job_id, "badsha")
+        }
+        console.log("Badsha started successfully.");
+        localStorage.removeItem("badshaReportRunning");
+    } catch (err) {
+        console.error("Badsha Report Error: ", err);
+        console.error("Badsha Report Automation Failed.");
+        localStorage.removeItem("badshaReportRunning")
+    }
+};
 // On page load
 window.addEventListener("DOMContentLoaded", () => {
     const conversionRunning = localStorage.getItem("conversionRunning") === "true";
     const socialMediaRunning = localStorage.getItem("socialMediaRunning") === "true";
     const businessProcessRunning = localStorage.getItem("businessProcessRunning") === "true";
+    const nsuFtdTrackerRunning = localStorage.getItem("nsuFtdTrackerRunning") === "true";
+    const badshaReportRunning = localStorage.getItem("badshaReportRunning") === "true";
 
     if (conversionRunning) {
         conversionBtn.disabled = true;
@@ -270,12 +314,21 @@ window.addEventListener("DOMContentLoaded", () => {
         if (jobId) pollLogs(jobId, "business");
     }
 
-    if (isNsuFtdTrackerRunning) {
+    if (nsuFtdTrackerRunning) {
         nsuftdBtn.disabled = true;
         nsuftdBtn.textContent = "Processing...";
         isNsuFtdTrackerRunning = true;
 
         const jobId = localStorage.getItem("nsuFtdTrackerJobId");
         if (jobId) pollLogs(jobId, "tracker");
+    }
+
+    if (badshaReportRunning) {
+        badshaBtn.disabled = true;
+        badshaBtn.textContent = "Processing...";
+        isBadshaReportRunning = true;
+
+        const jobId = localStorage.getItem("badshaReportJobId");
+        if (jobId) pollLogs(jobId, "badsha")
     }
 });
