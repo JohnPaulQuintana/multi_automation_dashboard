@@ -1,11 +1,9 @@
 
 from app.config.loader import NSU_FTD_TRACKER_SHEET
-from app.constant.tracker import START_DATE, END_DATE, TRACKER_RANGE
+from app.constant.tracker import TRACKER_RANGE
 from app.debug.line import debug_line, debug_title
-# from app.helpers.conversion.conversion import build_social_row,build_affiliate_row,build_affiliate_row_socmed
 from app.controllers.tracker.SpreadSheetController import SpreadsheetController
 from app.controllers.tracker.AffiliateController import AffiliateController
-# from app.helpers.conversion.spreadsheet import SpreadsheetController as Sheet
 from app.helpers.tracker.TrackerSpreadsheet import spreadsheet
 from app.automations.log.state import log  # ✅ import from new file
 from datetime import datetime, timedelta

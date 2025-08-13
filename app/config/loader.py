@@ -22,6 +22,12 @@ SS_PASSWORD = os.getenv("SS_PASSWORD", "")
 # NSU AND FTD Tracker Automation
 NSU_FTD_TRACKER_SHEET = os.getenv("NSU_FTD_TRACKER_SHEET")
 
+
+#Badsha Report Automation
+BR_USERNAME = os.getenv("BR_USERNAME", "")
+BR_PASSWORD = os.getenv("BR_PASSWORD", "")
+DAILY_BO_BADSHA = os.getenv("DAILY_BO_BADSHA", "")
+
 TYPE = os.getenv("TYPE")
 PROJECT_ID = os.getenv("PROJECT_ID")
 PRIVATE_KEY_ID = os.getenv("PRIVATE_KEY_ID")

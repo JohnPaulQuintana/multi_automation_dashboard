@@ -277,7 +277,7 @@ class AffiliateController:
             page.wait_for_load_state('networkidle')
             return True
         except TimeoutError:
-            log.error(job_id, "Navigation wait timeout.")
+            log(job_id, "Navigation wait timeout.")
             return False
         
     def authentication(self, page, job_id):
