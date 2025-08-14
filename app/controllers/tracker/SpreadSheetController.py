@@ -39,9 +39,13 @@ class SpreadsheetController:
             rows = result.get("values", [])
 
             running_accounts = []
-
+            # skip_ids = {"cxs6shabbdt"}          
             for row in rows:
                 if len(row) >= 7 and row[6].strip().lower() == "running":
+                    # account_id = row[1].strip()  # adjust index if ID is in another column
+                    # if account_id in skip_ids:
+                    #     print(f"Skipping account: {account_id}")
+                    #     continue
                     acount_info = row[:8]
                     running_accounts.append(acount_info)
                     # print("Running Account:", acount_info)

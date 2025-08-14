@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import threading
 
 
-def process_brand(job_id, brand, accounts, brand_urls, date):
+def process_brand(job_id, brand, accounts, brand_urls, date, failed_accounts):
     log(job_id, f"🚀 Starting brand: {brand}")
     all_data = []
 
@@ -31,12 +31,16 @@ def process_brand(job_id, brand, accounts, brand_urls, date):
             date,
         )
         result = data.run(job_id)
-        all_data.extend(result)
+        if result:
+            all_data.extend(result)
+        else:
+            log(job_id, f"⚠️ No data returned for {username}, skipping.")
+            failed_accounts.append(username)
 
     log(job_id, f"✅ Finished brand: {brand} ({len(all_data)} records)")
     return all_data
 
-def process_thread(job_id, sheet_id, range, date):
+def process_thread(job_id, sheet_id, range, date, failed_accounts):
     log(job_id, "Processing USER SHEETS")
     gs = SpreadsheetController(sheet_id, range).get_account()
     gs_sorted = sorted(gs, key=lambda row: row[0])
@@ -63,7 +67,7 @@ def process_thread(job_id, sheet_id, range, date):
     threads = []
     results = []
     def thread_runner(b):
-        data = process_brand(job_id, b, accounts_by_brand[b], brand_urls, date)
+        data = process_brand(job_id, b, accounts_by_brand[b], brand_urls, date, failed_accounts)
         results.extend(data)
 
     for brand in target_brands:
@@ -88,7 +92,7 @@ def run(job_id):
     # print(YESTERDAY,TARGET_DATE,SHEET_DATE,SOCIAL_RANGES,AFFILIATE_RANGES)
     debug_line()
     today = datetime.today()
-
+    failed_accounts = []
     if today.weekday() == 0: #monday=0, sunday=6
         # Last Friday, Saturday, Sunday
         dates_to_process = [
@@ -105,7 +109,7 @@ def run(job_id):
 
         all_data = process_thread(
             job_id,
-            NSU_FTD_TRACKER_SHEET, TRACKER_RANGE["USER"], date_str,
+            NSU_FTD_TRACKER_SHEET, TRACKER_RANGE["USER"], date_str, failed_accounts,  
         )
 
         for row in all_data:
@@ -120,4 +124,10 @@ def run(job_id):
             NSU_FTD_TRACKER_SHEET, TRACKER_RANGE
         ).transfer(job_id)
 
+    if failed_accounts:
+        log(job_id, "⚠️ The following accounts returned no data:")
+        for username in failed_accounts:
+            log(job_id, f" - {username}")
+    else:
+        log(job_id, "✅ All accounts returned data.")
     log(job_id, "✅ Job complete")

@@ -15,7 +15,7 @@ class AffiliateController:
         self.currency = currency
         self.platform = platform
         self.startDate = rangeDate
-        self.max_retries = 3
+        self.max_retries = 2
 
         parsed_url = urlparse(self.url)
         self.domain = f"{parsed_url.scheme}://{parsed_url.netloc}"
@@ -209,7 +209,7 @@ class AffiliateController:
         except TimeoutError:
             # logging.warning(f"Tab trigger failed, retrying {retries + 1}/{self.max_retries}...")
                 # retries += 1
-            time.sleep(3)
+            time.sleep(1)
         time.sleep(1)
 
         ftd_data = self.extract_keyword_ftd_only(page, rangeDate)
@@ -239,7 +239,7 @@ class AffiliateController:
             time.sleep(1)
             try:
                 # Try using JavaScript to click the first menu button
-                page.wait_for_selector(menu_selector, timeout=10000)
+                page.wait_for_selector(menu_selector, timeout=5000)
                 page.eval_on_selector(f'xpath={menu_selector}', "element => element.click()")
                 log(job_id, "Registration button clicked using JavaScript.")
             except PlaywrightTimeoutError:
@@ -250,7 +250,7 @@ class AffiliateController:
             
             try:
                 # Try using JavaScript to click the second menu button
-                page.wait_for_selector(menu_selector_nsu, timeout=10000)
+                page.wait_for_selector(menu_selector_nsu, timeout=5000)
                 page.eval_on_selector(f'xpath={menu_selector_nsu}', "element => element.click()")
                 log(job_id, "NSU button clicked using JavaScript.")
             except PlaywrightTimeoutError:
@@ -267,7 +267,7 @@ class AffiliateController:
             except TimeoutError:
                 log(job_id, f"Tab trigger failed, retrying {retries + 1}/{self.max_retries}...")
                 retries += 1
-                time.sleep(2)
+                time.sleep(1)
         
         log(job_id, "Failed to trigger sidebar after several attempts.")
         return False
