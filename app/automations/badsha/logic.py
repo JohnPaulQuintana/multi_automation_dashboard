@@ -30,7 +30,8 @@ def process_data(job_id, username, password, sheet_url, startDate, endDate, time
     fetch_data = spreadsheet(
         result,
         sheet_url,
-        sheet_range
+        sheet_range,
+        endDate
 
     ).transfer(job_id)
 

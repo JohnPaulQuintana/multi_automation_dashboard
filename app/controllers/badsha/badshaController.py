@@ -1,7 +1,12 @@
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from app.automations.log.state import log
+from collections import defaultdict
+from bs4 import BeautifulSoup
+import requests
+import json
+import re
 import time
 
 class BadshaController:
@@ -36,12 +41,13 @@ class BadshaController:
             page.click('button[type="submit"]')
             self.wait_for_navigation(page, job_id)
             log(job_id, "Authenticated Successfull")
-            time.sleep(1.5)
+            time.sleep(1)
             return True
         except Exception as e:
             log(job_id, f"Error Authentication: {e}")
             return False
     def filter_nsu_data(self, data, index):
+
         return {
             "#": index + 1,
             "userId": data.get("userId"),
@@ -51,10 +57,10 @@ class BadshaController:
             "name": data.get("name"),
             "email": data.get("email"),
             "tel": data.get("tel"),
-            "firstDeposit": data.get("firstDeposit"),
+            "firstDeposit": "√" if data.get("firstDeposit") else "",
             "type": "New Signup",
-            "status": "PENDING",
-            "kyc": data.get("kyc")
+            "status": "PENDING"
+
         }
         
     def nsu_data(self,page, job_id):
@@ -116,7 +122,10 @@ class BadshaController:
                         all_results.append(filtered)
                         global_index += 1
                         filtered_count += 1
-                  
+
+                    
+                    # return filtered_results
+                    
                 else:
                     html_text = response.text()
                     log(job_id, "📄 HTML Data:", html_text)
@@ -542,20 +551,17 @@ class BadshaController:
                         "Jackpot Win/Loss": self.get_jackpot_value(row),
                         "Member Comm.": row.query_selector("td#userTotalPlComm").inner_text().strip(),
                         "Total P/L": row.query_selector("td#userTotalPlProfitloss").inner_text().strip(),
-                        "PT Win/Loss (Direct)": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
-                        "Comm. (Direct)": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
+                        "PT Win/Loss": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
+                        "Direct Comm.": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
                         "Total P/L (Direct)": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
-                        "PT Win/Loss (Self)": row.query_selector('td[data-type="userTotalselfWinloss"]').inner_text().strip(),
-                        "Comm. (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
+                        "PT Win/Loss (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
+                        "Self Comm.": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
                         "Total P/L (Self)": row.query_selector("td#userTotalselfComm").inner_text().strip(),
                         "Company": self.get_company_value(row)
                     })
 
             # Show clean result
-            for d in data:
-                print(d)
-            
-            return True
+            return data
             # return all_results            
         log(job_id, "Failed to trigger sidebar after several attempts.")
         return False
@@ -599,16 +605,16 @@ class BadshaController:
                     if self.authentication(page, job_id):
                         nsu_data = self.nsu_data(page, job_id)
                         log(job_id, "NSU Data Scraping Finished")
-                        # log(job_id, f"NSU Data: {nsu_data}")
+                        log(job_id, f"NSU Data: {nsu_data}")
                         time.sleep(3)
 
                         ftd_data = self.ftd_data(page, job_id)
                         log(job_id, "FTD Data Scraping Finished")
-                        # log(job_id, f"FTD Data: {ftd_data}")
+                        log(job_id, f"FTD Data: {ftd_data}")
                         time.sleep(3)
 
                         deposit_data = self.deposit_data(page, job_id)
-                        log(job_id, "Deposit Data Scraping Finished")
+                        log(job_id, "FTD Data Scraping Finished")
                         # log(job_id, f"Deposit Data: {deposit_data}")
                         time.sleep(3)
                         
@@ -627,11 +633,12 @@ class BadshaController:
                             "icon": "success",
                             "NSU": nsu_data,
                             "FTD" : ftd_data,
-                            "Deposit": deposit_data,
-                            "Withdrawal": withdrawal_data,
-                            "VT/APL/TPL": vt_apl_tpl_data,
+                            "DEPOSIT": deposit_data,
+                            "WITHDRAWAL": withdrawal_data,
+                            "VT/APL/TPL": vt_apl_tpl_data
 
                         }
+                        
                         return data
                 except (PlaywrightTimeoutError, Exception) as e:
                     log(job_id, f"Error during site visit on attempt {retry + 1}: {e}")
