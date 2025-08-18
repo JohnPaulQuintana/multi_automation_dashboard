@@ -1,7 +1,10 @@
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from app.automations.log.state import log
+from collections import defaultdict
+import json
+import re
 import time
 
 class BadshaController:
@@ -30,13 +33,13 @@ class BadshaController:
             log(job_id, f"Username: {self.username}, Date Today: {self.todayDate}, Yesterday Date: {self.yesterdayDate}")
 
             page.fill('input#account', self.username)
-            time.sleep(.5)
+            time.sleep(1)
             page.fill('input#password', self.password.replace(" ", ""))
-            time.sleep(.5)
+            time.sleep(1)
             page.click('button[type="submit"]')
             self.wait_for_navigation(page, job_id)
             log(job_id, "Authenticated Successfull")
-            time.sleep(1.5)
+            time.sleep(10)
             return True
         except Exception as e:
             log(job_id, f"Error Authentication: {e}")
@@ -57,6 +60,7 @@ class BadshaController:
             "kyc": data.get("kyc")
         }
         
+
     def nsu_data(self,page, job_id):
         log(job_id, "Scraping For NSU Data")
         all_results = []
@@ -116,7 +120,10 @@ class BadshaController:
                         all_results.append(filtered)
                         global_index += 1
                         filtered_count += 1
-                  
+
+                    
+                    # return filtered_results
+                    
                 else:
                     html_text = response.text()
                     log(job_id, "📄 HTML Data:", html_text)
@@ -409,6 +416,8 @@ class BadshaController:
         log(job_id, "Failed to trigger sidebar after several attempts.")
         return False
     
+    # def vt_apl_tpl_data_filter(self, data):
+    # def process_bdt_data(self, bdt_data):
     def filter_and_summarize_data(self, results_by_identifier):
         summarized_data = []
         
@@ -437,60 +446,6 @@ class BadshaController:
             })
         
         return summarized_data
-
-    def get_company_value(page, row):
-        try:
-            # Primary selector with data-type attribute for specificity
-            selector = "td[data-type='member']#userTotalCompany span.textRed"
-            element = row.query_selector(selector)
-            
-            if element:
-                return element.inner_text().strip()
-                
-            # Fallback selectors if primary fails
-            fallback_selectors = [
-                "td#userTotalCompany span.textRed",
-                "td#userTotalCompany",
-                "[id='userTotalCompany'] span"
-            ]
-            
-            for selector in fallback_selectors:
-                element = row.query_selector(selector)
-                if element:
-                    return element.inner_text().strip()
-                    
-            return "0"  # Default value when not found
-            
-        except Exception as e:
-            print(f"Error getting company value: {str(e)}")
-            return "0"
-
-    def get_jackpot_value(self, row):
-        try:
-            # Option 1: More specific selector
-            selector = "td[data-type='member']#userTotalPlJackpot span.textRed"
-            element = row.query_selector(selector)
-            
-            if element:
-                return element.inner_text().strip()
-                
-            # Option 2: Fallback selectors
-            fallback_selectors = [
-                "td#userTotalPlJackpot span.textRed",
-                "td#userTotalPlJackpot",
-                "[id='userTotalPlJackpot'] span"
-            ]
-            
-            for selector in fallback_selectors:
-                element = row.query_selector(selector)
-                if element:
-                    return element.inner_text().strip()
-                    
-            return "0"  # Default value when not found
-            
-        except Exception as e:
-            print(f"Error getting jackpot value: {str(e)}")
-            return "0"
 
     def vt_apl_tpl_data(self, page, job_id):
         log(job_id, "Scraping For vt_apl_tpl_data Data")
@@ -521,41 +476,36 @@ class BadshaController:
             log(job_id, "Inserted Filter")
             
             self.wait_for_navigation(page, job_id)
-            page.click('#queryReport')
+        
+            with page.expect_response(lambda r: "winloss" in r.url) as resp_info:
+                page.click('#queryReport')
+
             time.sleep(5)
+            response = resp_info.value
+            log(job_id, "Data Result Display")
+            if "application/json" in response.headers.get("content-type", ""):
+                data = response.json()
+                
+                bdt_data  = data.get("BDT", {})
+                log(job_id, f"Getting the data through Network Response. Keys: {list(bdt_data.keys())}")
+                results_by_identifier = {}
+                for identifier, records in bdt_data.items():
+                    log(job_id, f"Processing {identifier} with {len(records)} records")
+                    results_by_identifier[identifier] = records
+                    # processed_records = self.process_bdt_data(records)
+                # if bdt_data:
+                #     first_identifier, records = next(iter(bdt_data.items()))
+                #     log(job_id, f"Processing {first_identifier} with {len(records)} records")
+                #     processed_records = self.process_bdt_data(records)
+                #     results_by_identifier[first_identifier] = processed_records
+                summarized_data = self.filter_and_summarize_data(results_by_identifier)
 
-            page.wait_for_selector("#tbodyAgent tr#tempTitle")  # wait for top-level rows
-
-            data = []
-            rows = page.query_selector_all("#tbodyAgent tr#tempTitle")
-
-            for row in rows:
-                cols = [cell.inner_text().strip() for cell in row.query_selector_all("td")]
-                # If the table has fixed columns: User ID, Turnover, Name
-                if len(cols) >= 3:
-                    data.append({
-                        "User ID": row.query_selector("td a#titleUseID").inner_text().strip(),
-                        "Name": row.query_selector('td[data-type="name"]').inner_text().strip(),
-                        "Valid Turnover": row.query_selector("td#userTotalPlTurnover").inner_text().strip(),
-                        "Active Player": row.query_selector("td span#userTotalActivePlayer").inner_text().strip(),
-                        "Win/loss": row.query_selector("td div.member span#userTotalPlWinloss").inner_text().strip(),
-                        "Jackpot Win/Loss": self.get_jackpot_value(row),
-                        "Member Comm.": row.query_selector("td#userTotalPlComm").inner_text().strip(),
-                        "Total P/L": row.query_selector("td#userTotalPlProfitloss").inner_text().strip(),
-                        "PT Win/Loss (Direct)": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
-                        "Comm. (Direct)": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
-                        "Total P/L (Direct)": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
-                        "PT Win/Loss (Self)": row.query_selector('td[data-type="userTotalselfWinloss"]').inner_text().strip(),
-                        "Comm. (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
-                        "Total P/L (Self)": row.query_selector("td#userTotalselfComm").inner_text().strip(),
-                        "Company": self.get_company_value(row)
-                    })
-
-            # Show clean result
-            for d in data:
-                print(d)
+                return summarized_data
+                
+            else:
+                html_text = response.text()
+                log(job_id, "📄 HTML Data:", html_text)
             
-            return True
             # return all_results            
         log(job_id, "Failed to trigger sidebar after several attempts.")
         return False
@@ -597,26 +547,28 @@ class BadshaController:
                     log(job_id, "Page successfully loaded.")
 
                     if self.authentication(page, job_id):
-                        nsu_data = self.nsu_data(page, job_id)
-                        log(job_id, "NSU Data Scraping Finished")
-                        # log(job_id, f"NSU Data: {nsu_data}")
-                        time.sleep(3)
+                        # self.trigger_sidebar(page, job_id)
+                        # table_data = self.extract_table_data(page, job_id)
+                        # nsu_data = self.nsu_data(page, job_id)
+                        # log(job_id, "NSU Data Scraping Finished")
+                        # # log(job_id, f"NSU Data: {nsu_data}")
+                        # time.sleep(3)
 
-                        ftd_data = self.ftd_data(page, job_id)
-                        log(job_id, "FTD Data Scraping Finished")
-                        # log(job_id, f"FTD Data: {ftd_data}")
-                        time.sleep(3)
+                        # ftd_data = self.ftd_data(page, job_id)
+                        # log(job_id, "FTD Data Scraping Finished")
+                        # # log(job_id, f"FTD Data: {ftd_data}")
+                        # time.sleep(3)
 
-                        deposit_data = self.deposit_data(page, job_id)
-                        log(job_id, "Deposit Data Scraping Finished")
-                        # log(job_id, f"Deposit Data: {deposit_data}")
-                        time.sleep(3)
+                        # deposit_data = self.deposit_data(page, job_id)
+                        # log(job_id, "FTD Data Scraping Finished")
+                        # # log(job_id, f"Deposit Data: {deposit_data}")
+                        # time.sleep(3)
                         
-                        withdrawal_data = self.withdrawal_data(page, job_id)
-                        # log(job_id, f"Withdrawal Data: {withdrawal_data}")
+                        # withdrawal_data = self.withdrawal_data(page, job_id)
+                        # # log(job_id, f"Withdrawal Data: {withdrawal_data}")
 
                         vt_apl_tpl_data = self.vt_apl_tpl_data(page, job_id)
-                        # log(job_id, f"vt_apl_tpl_data: {vt_apl_tpl_data}")
+                        log(job_id, f"vt_apl_tpl_data: {vt_apl_tpl_data}")
 
                         log(job_id, f"Scraping Done: {self.username}")
 
@@ -625,14 +577,13 @@ class BadshaController:
                             "text": "Data Fetched successfully",
                             "title": "Fetch Completed!",
                             "icon": "success",
-                            "NSU": nsu_data,
-                            "FTD" : ftd_data,
-                            "Deposit": deposit_data,
-                            "Withdrawal": withdrawal_data,
-                            "VT/APL/TPL": vt_apl_tpl_data,
-
+                            # "NSU": nsu_data,
+                            # "FTD" : table_data_ftd,
                         }
-                        return data
+                        
+                        return {
+                            "status": "200"
+                        }
                 except (PlaywrightTimeoutError, Exception) as e:
                     log(job_id, f"Error during site visit on attempt {retry + 1}: {e}")
                     if retry < self.max_retries - 1:

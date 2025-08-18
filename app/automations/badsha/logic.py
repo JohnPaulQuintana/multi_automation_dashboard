@@ -1,17 +1,17 @@
 
 from app.config.loader import BR_USERNAME, BR_PASSWORD, DAILY_BO_BADSHA
-from app.constant.badsha import DAILY_BO_BADSHA, TODAY_DATE, YESTERDAY_DATE, TIME
+from app.constant.badsha import DAILY_BO_BADSHA_RANGE, TODAY_DATE, YESTERDAY_DATE, TIME
 from app.debug.line import debug_line, debug_title
 from app.helpers.conversion.conversion import build_social_row,build_affiliate_row,build_affiliate_row_socmed
 from app.controllers.conversion.AcquisitionController import AcquisitionController
 from app.controllers.conversion.SpreadSheetController import SpreadsheetController
 from app.controllers.badsha.badshaController import BadshaController
-from app.helpers.conversion.spreadsheet import SpreadsheetController as Sheet
+from app.helpers.badsha.BadshaSpreadsheet import spreadsheet
 from app.automations.log.state import log  # ✅ import from new file
 from datetime import datetime, timedelta
 
 
-def process_data(job_id, username, password, sheet_url, startDate, endDate, time):
+def process_data(job_id, username, password, sheet_url, startDate, endDate, time, sheet_range):
     log(job_id, f"🚀 Starting BO Basha: {username}")
     url = "https://ag.badsha.live/index.jsp"
     data = BadshaController(
@@ -24,6 +24,17 @@ def process_data(job_id, username, password, sheet_url, startDate, endDate, time
     )
     result = data.run(job_id)
 
+    if not (result and isinstance(result, dict) and "status" in result and result["status"] == 200):
+        raise ValueError(f"Scraping failed: 'No error message provided'")
+    
+    fetch_data = spreadsheet(
+        result,
+        sheet_url,
+        sheet_range
+
+    ).transfer(job_id)
+
+    log(job_id, "Scraping Process is success Data has been Fetch")
 
 def run(job_id):
     log(job_id, "🚀 Running BO BADSHA Automation...")
@@ -38,7 +49,7 @@ def run(job_id):
     today = datetime.today()
     all_data = process_data(
             job_id,
-            BR_USERNAME, BR_PASSWORD, DAILY_BO_BADSHA, TODAY_DATE, YESTERDAY_DATE, TIME,
+            BR_USERNAME, BR_PASSWORD, DAILY_BO_BADSHA, TODAY_DATE, YESTERDAY_DATE, TIME, DAILY_BO_BADSHA_RANGE,
         )
     log(job_id, "Scraping Process Finished")    
     # if today.weekday() == 0: #monday=0, sunday=6
