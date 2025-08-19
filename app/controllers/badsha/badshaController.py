@@ -615,14 +615,14 @@ class BadshaController:
 
                         deposit_data = self.deposit_data(page, job_id)
                         log(job_id, "FTD Data Scraping Finished")
-                        # log(job_id, f"Deposit Data: {deposit_data}")
+                        log(job_id, f"Deposit Data: {deposit_data}")
                         time.sleep(3)
                         
                         withdrawal_data = self.withdrawal_data(page, job_id)
-                        # log(job_id, f"Withdrawal Data: {withdrawal_data}")
+                        log(job_id, f"Withdrawal Data: {withdrawal_data}")
 
                         vt_apl_tpl_data = self.vt_apl_tpl_data(page, job_id)
-                        # log(job_id, f"vt_apl_tpl_data: {vt_apl_tpl_data}")
+                        log(job_id, f"vt_apl_tpl_data: {vt_apl_tpl_data}")
 
                         log(job_id, f"Scraping Done: {self.username}")
 

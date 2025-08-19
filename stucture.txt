@@ -16,30 +16,36 @@ multi_automation_dashboard/
 │   │       └── conversion/
 │   │           └── get_request.py
 │   ├── controllers/
-│   │   ├── conversion/
-│   │   │   ├── acquisition_controller.py
+│   │   ├── badsha/
+│   │   │   ├── BadshaController.py
 │   │   │   └── spreadsheet_controller.py
-│   │   ├── tracker/ # NSU/FTD Tracker
-│   │   │   ├── AffiliateController.py
+│   │   ├── business_process/
+│   │   │   ├── sql/
+│   │   │   ├── key_mapping.py
+│   │   │   ├── spreadsheet_extractor.py
+│   │   │   └── superset_scraping.py
+│   │   ├── conversion/
+│   │   │   ├── Acquisition_Controller
 │   │   │   └── SpreadSheetController.py
-│   │   └── business_process/
-│   │       ├── sql/
-│   │       ├── key_mapping.py
-│   │       ├── spreadsheet_extractor.py
-│   │       └── superset_scraping.py
+│   │   └── tracker/ # NSU/FTD Tracker
+│   │       ├── AffiliateController.py
+│   │       └── SpreadSheetController.py
 │   ├── debug/
 │   │   └── line.py
 │   ├── constant/
-│   │   ├── conversion.py # all the constant
-│   │   └── tracker.py # NSU/FTD Tracker constant
+│   │   ├── badsha.py # all the constant of badsha
+│   │   ├── conversion.py # all the constant of badsha
+│   │   └── tracker.py # NSU/FTD Tracker constant of badsha
 │   ├── dependencies/
 │   │   └── auth.py # check authenticated users using Depend
 │   ├── helpers/
+│   │   ├── badsha/
+│   │   │   └── BadshaSpreadsheet.py # conversion helpers
+│   │   ├── business_process/
+│   │   │   └── businessSpreadsheet.py # business_process helpers
 │   │   ├── conversion/
 │   │   │   ├── conversion.py # conversion helpers
 │   │   │   └── spreadsheet.py # conversion helpers
-│   │   ├── business_process/
-│   │   │   └── businessSpreadsheet.py # business_process helpers
 │   │   ├── tracker/
 │   │   │   └── trackerSpreadsheet.py # NSU/FTD Tracker helpers
 │   │   └── template.py # initialize templates
@@ -52,19 +58,24 @@ multi_automation_dashboard/
 │   ├── config/ 
 │   │   └── loader.py # load .env condiguration globally
 │   ├── automations/
+│   │   ├── badsha/
+│   │   │   ├── logic.py
+│   │   │   └── routes.py
+│   │   ├── business_process/
+│   │   │   ├── logic.py
+│   │   │   ├── routes.py
+│   │   │   └── schema.py
 │   │   ├── conversion/
 │   │   │   ├── logic.py
 │   │   │   └── routes.py
+│   │   ├── log/
+│   │   │   └── state.py
 │   │   ├── media/
 │   │   │   ├── logic.py
 │   │   │   └── routes.py
-│   │   ├── tracker/
-│   │   │   ├── logic.py
-│   │   │   └── routes.py
-│   │   └── business_process/
+│   │   └── tracker/
 │   │       ├── logic.py
-│   │       ├── routes.py
-│   │       └── schema.py
+│   │       └── routes.py
 │   └── templates/
 │       ├── partials/
 │       │   ├── _header.html
