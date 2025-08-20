@@ -10,6 +10,8 @@ from google.oauth2.service_account import Credentials
 from app.automations.log.state import log
 from typing import List, Any
 import time
+import os
+import json
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -164,9 +166,68 @@ class spreadsheet():
         except HttpError as err:
             raise Exception(f"Google Sheets API error (write_values): {err}")
         
+    def load_previous_code_data(self, filepath="app/helpers/badsha/code_snapshot.json"):
+        """Load previous Code sheet snapshot if it exists."""
+        if os.path.exists(filepath):
+            with open(filepath, "r") as f:
+                return json.load(f)
+        return None
+    
+    def save_current_code_data(self, data, filepath="app/helpers/badsha/code_snapshot.json"):
+        """Save current Code sheet snapshot for future reference."""
+        with open(filepath, "w") as f:
+            json.dump(data, f, indent=2)
+    
+    def get_code_data(self, sheet_id, sheet_name, sheet_range="A5:R"):
+        """Fetch Code sheet values."""
+        try:
+            result = self.service.spreadsheets().values().get(
+                spreadsheetId=sheet_id,
+                range=f"{sheet_name}!{sheet_range}"
+            ).execute()
+            return result.get("values", [])
+        except HttpError as err:
+            raise Exception(f"Google Sheets API error (get_code_data): {err}")
+    
+    def compare_snapshots(self, old_data, new_data):
+        """Compare two snapshots and return only the differences (value-level)."""
+        changes = []
+        max_len = max(len(old_data), len(new_data))
+
+        for i in range(max_len):
+            old_row = old_data[i] if i < len(old_data) else None
+            new_row = new_data[i] if i < len(new_data) else None
+
+            # 🔄 Case 1: Row existed in both → check cell by cell
+            if old_row and new_row:
+                for col, (old_val, new_val) in enumerate(zip(old_row, new_row), start=1):
+                    if str(old_val).strip() != str(new_val).strip():
+                        changes.append(f"Change: old={old_val} → new={new_val}")
+
+                # If new_row has extra cells
+                if len(new_row) > len(old_row):
+                    for extra in new_row[len(old_row):]:
+                        changes.append(f"Added Value: {extra}")
+
+            # ➕ Case 2: New row added
+            elif not old_row and new_row:
+                changes.append(f"Added Row: {new_row}")
+
+            # ❌ Case 3: Row removed
+            elif old_row and not new_row:
+                changes.append(f"Removed Row: {old_row}")
+
+        return changes
+
     def transfer(self, job_id):
         try:
             log(job_id, "📤 Starting data transfer to spreadsheet...")
+
+            # --- Step 1: Compare CODE sheet vs previous JSON ---
+            log(job_id, "🔎 Checking CODE sheet against previous snapshot...")
+            previous_snapshot = self.load_previous_code_data()
+        
+
             nsu_data = self.data.get("NSU", [])
             ftd_data = self.data.get("FTD", [])
             withdrawal_data = self.data.get("WITHDRAWAL", [])
@@ -221,7 +282,29 @@ class spreadsheet():
                 time.sleep(1.5)
 
 
-            # self.copy_part_data(self.url)
+
+            # Fetch Latest Snapshot after Automation
+            latest_code = self.get_code_data(self.url, DAILY_BO_BADSHA_RANGE["CODE"])
+
+            if previous_snapshot:
+                log(job_id, "🔎 Comparing with previous snapshot...")
+                diffs = self.compare_snapshots(previous_snapshot, latest_code)
+
+                if diffs:
+                    for change in diffs:
+                        log(job_id, change)
+                else:
+                    log(job_id, "✅ No changes detected.")
+            else:
+                log(job_id, "ℹ️ No previous snapshot found (first run). Skipping diff report.")
+
+            log(job_id, "✅ Transfer completed successfully.")
+
+            # Save current CODE sheet snapshot ---
+            log(job_id, "💾 Saving current CODE sheet snapshot for next automation...")
+            self.save_current_code_data(latest_code)
+
+            log(job_id, "✅ Transfer completed successfully.")
         except Exception as e:
             log(job_id, f"❌ Transfer failed due to error: {e}")
             return {"status": "Failed"}
