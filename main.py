@@ -25,7 +25,7 @@ app.add_middleware(
 
 app.include_router(base_router.router)
 app.include_router(coversion_routes.router, prefix="/api/v1/conversion")
-app.include_router(media_routes.router, prefix="/api/v1/media")
+# app.include_router(media_routes.router, prefix="/api/v1/media")
 app.include_router(business_routes.router, prefix="/api/v1/business")
 app.include_router(nsuftd_tracker.router, prefix="/api/v1/tracker")
 app.include_router(badsha_report.router, prefix="/api/v1/badsha")

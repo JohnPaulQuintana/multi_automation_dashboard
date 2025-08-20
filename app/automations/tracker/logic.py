@@ -82,7 +82,7 @@ def process_thread(job_id, sheet_id, range, date, failed_accounts):
     return results
 
 def run(job_id):
-    log(job_id, "🚀 Running Conversion Automation...")
+    log(job_id, "🚀 Running NSU/FTD Tracker Automation...")
     debug_title("Running NSU/FTD Tracker Automation...")
     # print(USERNAME,PASSWORD,SOCIAL_SHEET_ID,AFFILIATE_SHEET_ID)
     debug_line()

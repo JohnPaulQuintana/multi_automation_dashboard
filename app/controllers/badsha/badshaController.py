@@ -10,12 +10,12 @@ import re
 import time
 
 class BadshaController:
-    def __init__(self, username, password, url, TodayDate, YesterdayDate, timeRange):
+    def __init__(self, username, password, url, startDate, endDate, timeRange):
         self.username = username
         self.password = password
         self.url = url
-        self.todayDate = TodayDate
-        self.yesterdayDate = YesterdayDate
+        self.todayDate = endDate
+        self.yesterdayDate = startDate
         self.timeRange = timeRange
         self.max_retries = 3
         parsed_url = urlparse(self.url)
@@ -32,7 +32,7 @@ class BadshaController:
     
     def authentication(self, page, job_id):
         try:
-            log(job_id, f"Username: {self.username}, Date Today: {self.todayDate}, Yesterday Date: {self.yesterdayDate}")
+            log(job_id, f"Username: {self.username}, Yesterday Date: {self.yesterdayDate}, Date Today: {self.todayDate},")
 
             page.fill('input#account', self.username)
             time.sleep(.5)
@@ -614,7 +614,7 @@ class BadshaController:
                         time.sleep(3)
 
                         deposit_data = self.deposit_data(page, job_id)
-                        log(job_id, "FTD Data Scraping Finished")
+                        log(job_id, "DEPOSIT Data Scraping Finished")
                         log(job_id, f"Deposit Data: {deposit_data}")
                         time.sleep(3)
                         
