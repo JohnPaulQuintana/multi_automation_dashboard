@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 TODAY = datetime.now().date()
 
 YESTERDAY = TODAY - timedelta(days=1)
-YESTERDAY_DATE = YESTERDAY.strftime("%d-%m-%Y")   # 2025/07/14
-TODAY_DATE  = TODAY.strftime("%d-%m-%Y")   # 14/07/2025
+YESTERDAY_DATE = YESTERDAY.strftime("%d-%m-%Y")   # 07/11/2001
+TODAY_DATE  = TODAY.strftime("%d-%m-%Y")    # 07/11/2001
 TIME = "12:00:00"
 
 

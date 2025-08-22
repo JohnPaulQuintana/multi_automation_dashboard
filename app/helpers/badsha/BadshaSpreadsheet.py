@@ -9,6 +9,7 @@ from googleapiclient.errors import HttpError
 from google.oauth2.service_account import Credentials
 from app.automations.log.state import log
 from typing import List, Any
+from datetime import datetime, timedelta
 import time
 import os
 import json
@@ -21,7 +22,7 @@ class spreadsheet():
         self.data = data
         self.url = sheet_url
         self.sheetId = sheet_range
-        self.yesterdayDate = yesterdayDate
+        self.startDate = yesterdayDate
         self.scope = ["https://www.googleapis.com/auth/spreadsheets"]
         config_dict = {
             "type": TYPE,
@@ -53,35 +54,49 @@ class spreadsheet():
             raise Exception(f"Google Sheets API error (get_first_empty_row): {err}")
 
 
-    def insert_values(self, sheet_id, sheet_name, values, col="A", add_blank=False, add_date=False):
-        """Insert rows into the first empty cell starting at row 4 in column A."""
+    def batch_insert_values(self, sheet_id, data_dict):
+        """
+        Insert multiple datasets into different sheets in ONE API call.
+        data_dict: { sheet_name: (values, vt_apl_tpl_flag) }
+        """
         try:
-            start_row = self.get_first_empty_row(sheet_id, sheet_name, col, start_row=4)
-            
-            # if add_blank=True, skip one row (leave blank)
-            # if add_blank:
-            #     start_row += 1  
+            requests = []
+            for sheet_name, (values, vt_apl_tpl) in data_dict.items():
+                if not values:
+                    continue
 
-            if add_date:
-                # Date goes in A, B & C blank, then rest in D+
-                parsed_date = datetime.strptime(self.yesterdayDate, "%d-%m-%Y")
-                date_value = parsed_date.strftime("%b %d %Y")  # e.g. "Aug 18 2025" 
+                # Find first empty row for this sheet
+                start_row = self.get_first_empty_row(sheet_id, sheet_name, col="A", start_row=4)
 
-                values = [[date_value] + [None, None] + row for row in values]
-                insert_col = "A"
-            else:
-                # Default case → insert starting at D
-                insert_col = "D"
-            body = {"values": values}
-            self.service.spreadsheets().values().append(
-                spreadsheetId=sheet_id,
-                range=f"{sheet_name}!{insert_col}{start_row}",  # insert starting at col D
-                valueInputOption="USER_ENTERED",
-                body=body
-            ).execute()
+                if vt_apl_tpl:
+                    # transform values (date, None, None, rest)
+                    new_values = []
+                    for row in values:
+                        date_value = row[0]
+                        rest = row[1:]
+                        new_values.append([date_value, None, None] + rest)
+                    values = new_values
+                    insert_col = "A"
+                else:
+                    insert_col = "D"
+
+                requests.append({
+                    "range": f"{sheet_name}!{insert_col}{start_row}",
+                    "values": values
+                })
+
+            if requests:
+                body = {
+                    "valueInputOption": "USER_ENTERED",
+                    "data": requests
+                }
+                self.service.spreadsheets().values().batchUpdate(
+                    spreadsheetId=sheet_id,
+                    body=body
+                ).execute()
+
         except HttpError as err:
-            raise Exception(f"Google Sheets API error: {err}")
-
+            raise Exception(f"Google Sheets API error (batch_insert_values): {err}")
 
     def clean_entry(self, entry):
         cleaned = []
@@ -92,13 +107,13 @@ class spreadsheet():
             cleaned.append(v)
         return cleaned
 
-    def update_code_header(self, sheet_id, sheet_name):
+    def update_code_header(self, sheet_id, sheet_name, date):
         """
         Update merged cell C1:K1 in the CODE sheet.
         Note: you only need to update the top-left cell (C1).
         """
         try:
-            parsed_date = datetime.strptime(self.yesterdayDate, "%d-%m-%Y")
+            parsed_date = datetime.strptime(date, "%d-%m-%Y")
             date_value = parsed_date.strftime("%d/%m/%Y") 
 
             body = {"values": [[date_value]]}
@@ -109,7 +124,7 @@ class spreadsheet():
                 body=body
             ).execute()
 
-            return True
+            return date_value
         except HttpError as err:
             raise Exception(f"Google Sheets API error (update_code_header): {err}")
         
@@ -137,32 +152,66 @@ class spreadsheet():
             return result.get("values", [])
         except HttpError as err:
             raise Exception(f"Google Sheets API error (affibo): {err}")
-        
-    def write_values(self, sheet_id, sheet_name, value, add_blank=False):
+
+    def normalize_date(self, date_str: str):
+        """
+        Try multiple formats for parsing sheet dates.
+        Returns a normalized YYYY-MM-DD string for comparison.
+        """
+        for fmt in ["%b %d %Y", "%B %d %Y", "%d/%m/%Y"]:
+            try:
+                return datetime.strptime(date_str, fmt).date()
+            except ValueError:
+                continue
+        return None
+
+    def write_values(self, job_id, sheet_id, sheet_name, value, targetDate, add_blank=False):
         """
         Write values into target sheet.
         Automatically finds the last filled row in `col` and writes starting at the next row.
         """
         try:
+            target_date = self.normalize_date(targetDate)
+
             result = self.service.spreadsheets().values().get(
                 spreadsheetId=sheet_id,
                 range=f"{sheet_name}!A3:A"  # entire column
             ).execute()
             existing_values = result.get("values", [])
-            last_row = len(existing_values) + 2
 
+            row_to_update = None
+            for idx, row in enumerate(existing_values, start=3):
+                if row:  # non-empty
+                    row_date = self.normalize_date(row[0])
+                    if row_date and row_date == target_date:
+                        row_to_update = idx
+                        break
+            log(job_id, "Checking if there is matching Data")
+            if row_to_update:  # UPDATE existing row
+                log(job_id, f"Updating Data on Date: {targetDate}")
+                start_cell = f"A{row_to_update}"
+                body = {"values": value}
+                self.service.spreadsheets().values().update(
+                    spreadsheetId=sheet_id,
+                    range=f"{sheet_name}!{start_cell}",
+                    valueInputOption="USER_ENTERED",
+                    body=body
+                ).execute()
+            else:
+                log(job_id, f"Appending Data to the Bottom")
+                last_row = len(existing_values) + 2
+                start_row = last_row + (2 if add_blank else 1)
 
-            start_row = last_row + (2 if add_blank else 1)
+                # Step 2: Define target range dynamically
+                start_cell = f"A{start_row}"
+                body = {"values": value}
+                self.service.spreadsheets().values().append(
+                    spreadsheetId=sheet_id,
+                    range=f"{sheet_name}!{start_cell}",
+                    valueInputOption="USER_ENTERED",
+                    body=body
+                ).execute()
 
-            # Step 2: Define target range dynamically
-            start_cell = f"A{start_row}"
-            body = {"values": value}
-            self.service.spreadsheets().values().append(
-                spreadsheetId=sheet_id,
-                range=f"{sheet_name}!{start_cell}",
-                valueInputOption="USER_ENTERED",
-                body=body
-            ).execute()
         except HttpError as err:
             raise Exception(f"Google Sheets API error (write_values): {err}")
         
@@ -241,46 +290,52 @@ class spreadsheet():
             deposit_values = [self.clean_entry(entry) for entry in deposit_data]
             vt_apl_tpl_values = [self.clean_entry(entry) for entry in vt_apl_tpl_data]
 
-            if nsu_values:
-                self.insert_values(self.url, DAILY_BO_BADSHA_RANGE["NSU"], nsu_values)
-                log(job_id, "NSU Data Insertion Completed")
-            if ftd_values:
-                self.insert_values(self.url, DAILY_BO_BADSHA_RANGE["FTD"], ftd_values)
-                log(job_id, "FTD Data Insertion Completed")
-            if deposit_values:
-                self.insert_values(self.url, DAILY_BO_BADSHA_RANGE["DEPOSIT"], deposit_values)
-                log(job_id, "DEPOSIT Data Insertion Completed")
-            if withdrawal_values:
-                self.insert_values(self.url, DAILY_BO_BADSHA_RANGE["WITHDRAWAL"], withdrawal_values)
-                log(job_id, "WITHDRAWAL Data Insertion Completed")
-            if vt_apl_tpl_values:
-                self.insert_values(self.url, DAILY_BO_BADSHA_RANGE["VT/APL/TPL"], vt_apl_tpl_values, add_blank=True, add_date=True)
-                log(job_id, "VT/APL/TPL Data Insertion Completed")
+            self.batch_insert_values(self.url, {
+                DAILY_BO_BADSHA_RANGE["NSU"]: (nsu_values, False),
+                DAILY_BO_BADSHA_RANGE["FTD"]: (ftd_values, False),
+                DAILY_BO_BADSHA_RANGE["DEPOSIT"]: (deposit_values, False),
+                DAILY_BO_BADSHA_RANGE["WITHDRAWAL"]: (withdrawal_values, False),
+                DAILY_BO_BADSHA_RANGE["VT/APL/TPL"]: (vt_apl_tpl_values, True),
+            })
 
-            # Step 2: Process for sheetNames (CODE, AFFILIATE, BOBADSHA AFFIBO)
+            # Process for sheetNames (CODE, AFFILIATE, BOBADSHA AFFIBO)
             time.sleep(2.5) 
             log(job_id, "Processing on the Date of Sheet(CODE)")
-            codeHeader = self.update_code_header(self.url, DAILY_BO_BADSHA_RANGE["CODE"])
-            if not codeHeader:
-                log(job_id, "The updating Date in Sheet(CODE Failed)")
-            log(job_id, "The Date in the Sheet(CODE) has ben Changed to Yesterday Date")
-            time.sleep(4)
+            # codeDate = self.update_code_header(self.url, DAILY_BO_BADSHA_RANGE["CODE"])
+            # if not codeHeader:
+            #     log(job_id, "The updating Date in Sheet(CODE Failed)")
 
-            log(job_id, "Processing on the Result for Sheets(CODE, AFFILIATE, BOBADSHA, AFFIBO)")
+            # Example: backlog from 15-08-2025 to yesterday
+            try:
+                yesterdayDate = datetime.now().date() - timedelta(days=1)
+                start_date = datetime.strptime(self.startDate, "%d-%m-%Y").date()
 
-            BOBADSHA = self.bobadsha(self.url, DAILY_BO_BADSHA_RANGE["AFFILIATE"], "A3:M9")
+                while start_date <= yesterdayDate:
+                    formatted_date = start_date.strftime("%d-%m-%Y")
+                    codeDate = self.update_code_header(self.url, DAILY_BO_BADSHA_RANGE["CODE"], formatted_date)
 
-            AFFIBO = self.affibo(self.url, DAILY_BO_BADSHA_RANGE["AFFILIATE"], "A12:F")
+                    log(job_id, f"The Date in the Sheet(CODE) has been Changed to {formatted_date}")
+                    time.sleep(4)
+                    log(job_id, "Processing on the Result for Sheets(CODE, AFFILIATE, BOBADSHA, AFFIBO)")
 
-            if BOBADSHA:
-                self.write_values(self.url, DAILY_BO_BADSHA_RANGE["BOBADSHA"], BOBADSHA, add_blank=True)
-                log(job_id, "BOBADSHA Data Insertion Completed")
-                time.sleep(1.5)
-            if AFFIBO:
-                self.write_values(self.url, DAILY_BO_BADSHA_RANGE["AFFIBO"], AFFIBO, )
-                log(job_id, "AFFIBO Data Insertion Completed")
-                time.sleep(1.5)
+                    BOBADSHA = self.bobadsha(self.url, DAILY_BO_BADSHA_RANGE["AFFILIATE"], "A3:M9")
 
+                    AFFIBO = self.affibo(self.url, DAILY_BO_BADSHA_RANGE["AFFILIATE"], "A12:F")
+                    log(job_id, f"Successfuly Copied The Data for {formatted_date}")
+
+                    if BOBADSHA:
+                        self.write_values(job_id, self.url, DAILY_BO_BADSHA_RANGE["BOBADSHA"], BOBADSHA, codeDate, add_blank=True)
+                        log(job_id, "BOBADSHA Data Insertion Completed")
+                        time.sleep(1.5)
+                    if AFFIBO:
+                        self.write_values(job_id, self.url, DAILY_BO_BADSHA_RANGE["AFFIBO"], AFFIBO, codeDate )
+                        log(job_id, "AFFIBO Data Insertion Completed")
+                        time.sleep(1.5)
+
+                    start_date += timedelta(days=1)
+            except Exception as e:
+                log(job_id, f"❌ Error in process_bobadsha_affibo: {e}")
+                raise
 
 
             # Fetch Latest Snapshot after Automation

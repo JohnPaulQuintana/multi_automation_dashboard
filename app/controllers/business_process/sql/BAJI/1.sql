@@ -2,7 +2,7 @@
 WITH settings AS (
     SELECT '{{time_grain}}' AS time_grain
 ),
-deposit AS (
+deposit AS ( 
     SELECT 
         date_trunc((SELECT time_grain FROM settings), 
                    CAST(from_unixtime((approved_time + 28800000) / 1000) AS TIMESTAMP)) AS Date,

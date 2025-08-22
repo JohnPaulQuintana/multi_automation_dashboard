@@ -248,11 +248,14 @@ const StartNsuFtdTrackerAutomation = async () => {
 };
 
 // Badsha Report Automation / BO FTD NSU
-const BadshaReportAutomation = async () => {
+const BadshaReportAutomation = async (formData) => {
     if (isBadshaReportRunning || localStorage.getItem("badshaReportRunning") === "true") {
         console.log("Badsha Report Process is Already Running...")
         return;
     }
+    const {
+        startDate
+    } = formData;
     isBadshaReportRunning = true;
     localStorage.setItem("badshaReportRunning", "true");
 
@@ -261,7 +264,13 @@ const BadshaReportAutomation = async () => {
 
     try {
         const res = await fetch("/api/v1/badsha/start", {
-            method: "POST"
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                startDate
+            })
         });
         const data = await res.json();
         console.log("Badsha Report Done: ", data);

@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from fastapi import APIRouter, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from app.helpers.template import templates
@@ -6,6 +7,10 @@ from ..log.state import job_logs
 import uuid
 
 
+# ────────────────────── SCHEMA ────────────────────────
+class BadshaAutomationInput(BaseModel):
+    startDate: str
+
 router = APIRouter()
 
 # @router.get("/", response_class=HTMLResponse)
@@ -13,10 +18,10 @@ router = APIRouter()
 #     return templates.TemplateResponse("pages/conversion.html", {"request": request})
 
 @router.post("/start")
-def start_automation(background_tasks: BackgroundTasks):
+def start_automation(date: BadshaAutomationInput, background_tasks: BackgroundTasks):
     job_id = str(uuid.uuid4())
     job_logs[job_id] = ["🟡 Job accepted. Waiting to start..."]  # init
-    background_tasks.add_task(run, job_id)
+    background_tasks.add_task(run, job_id, date.startDate)
     return JSONResponse({"message": "Automation started", "job_id": job_id})
 
 @router.get("/logs/{job_id}")

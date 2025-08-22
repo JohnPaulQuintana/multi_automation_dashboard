@@ -35,7 +35,7 @@
             <!-- Tab Content -->
             <div id="d-tab-content" class="flex-1 overflow-y-auto p-2 md:p-4">
                 <!-- Conversion Automation 1 -->
-                <div x-show="$store.tab === 'conversion_automation'" x-transition class="flex items-center justify-between">
+                <div x-show="$store.tab === 'conversion_automation'" x-transition class="p-6 flex items-center justify-between bg-white rounded-xl shadow-md">
                 <h2 class="text-xl font-bold">Conversion Automation</h2>
                     <button
                     id="conversionBtn"
@@ -47,7 +47,7 @@
                 </div>
 
                 <!-- Social Media Automation 2 -->
-                <div x-show="$store.tab === 'social_media_automation'" x-transition class="flex items-center justify-between">
+                <div x-show="$store.tab === 'social_media_automation'" x-transition class="p-6 flex items-center justify-between bg-white rounded-xl shadow-md">
                     <h2 class="text-xl font-bold">Social Media Automation</h2>
                     <button
                         id="mediaBtn"
@@ -60,11 +60,10 @@
 
                 <!-- Business-Process Automation 3 -->
                 <div x-show="$store.tab === 'business_process_automation'" x-transition class="p-6 bg-white rounded-xl shadow-md space-y-6" x-data="businessAutomation">
-                    <h2 class="text-xl font-bold">Business Process Automation</h2>
                     <div class="flex flex-wrap items-end gap-4">
                         <!-- Brand -->
                         <div class="flex flex-col flex-1 min-w-[150px]">
-                            <label class="text-sm font-medium text-gray-700 mb-1">Brand</label>
+                            <h2 class="text-xl font-bold">Business Process Automation</h2>
                             <select x-model="selectedBrand" class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full">
                                 <option value="" disabled selected>-- Select Brand --</option>
                                 <option value="BAJI">BAJI</option>
@@ -122,9 +121,9 @@
                 </div>
 
                 <!-- FTD/NSU Tracker Automation -->
-                <div x-show="$store.tab === 'nsu_ftd_tracker_automation'" x-transition class="flex items-center justify-between">
+                <div x-show="$store.tab === 'nsu_ftd_tracker_automation'" x-transition class="p-6 flex items-center justify-between bg-white rounded-xl shadow-md">
                 <h2 class="text-xl font-bold">NSU/FTD Tracker Automation</h2>
-                
+                    
                     <button
                     id="nsuftdBtn"
                     onclick="StartNsuFtdTrackerAutomation()"
@@ -135,15 +134,21 @@
                 </div>
 
                 <!-- Badsha Report Automation -->
-                <div x-show="$store.tab === 'badsha_report_automation'" x-transition class="flex items-center justify-between">
-                <h2 class="text-xl font-bold">Badsha Report Automation</h2>
-                    <button
-                    id="badshaBtn"
-                    onclick="BadshaReportAutomation()"
-                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
-                    >
-                    <i data-lucide="play" class="inline w-4 h-4 mr-2"></i> Start
-                    </button>
+                <div x-show="$store.tab === 'badsha_report_automation'" x-transition class="p-6 flex items-center justify-between bg-white rounded-xl shadow-md" x-data="badshaAutomation">
+                    <h2 class="text-xl font-bold mt-1">Badsha Report Automation</h2>
+                    <div class="flex flex-wrap items-end gap-4">
+                        <div class="flex flex-col flex-1 min-w-[150px]">
+                            <label class="text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                            <input type="date" x-model="startDate" class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"/>
+                        </div>
+                        <button
+                        id="badshaBtn"
+                        @click="sendToAutomation"
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                        >
+                        <i data-lucide="play" class="inline w-4 h-4 mr-2"></i> Start
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Job Log Panel -->
@@ -152,7 +157,7 @@
                     $store.tab === 'business_process_automation' || $store.tab === 'nsu_ftd_tracker_automation' ||
                     $store.tab === 'badsha_report_automation'" 
                     x-transition id="job-log-panel" 
-                    class="mt-6 bg-gray-900 rounded-md shadow-lg h-[calc(100vh-160px)] overflow-y-auto border border-gray-700
+                    class="mt-3 bg-gray-900 rounded-md shadow-lg h-[calc(93vh-160px)] overflow-y-auto border border-gray-700
                     ">
                     <div class="flex justify-between items-center p-3 border-b border-gray-700">
                         <h2 class="text-sm font-semibold text-green-400 tracking-wide">Automation Logs</h2>
@@ -226,4 +231,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <!-- Inject Filter on the Business Process -->
 <script src="/static/js/business_process/filter.js?v={{ version }}"></script>
+<script src="/static/js/badsha/date.js?v={{ version }}"></script>
 {% endblock %}
