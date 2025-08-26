@@ -1,10 +1,5 @@
 from app.config.loader import TYPE,PROJECT_ID,PRIVATE_KEY_ID,PRIVATE_KEY,CLIENT_EMAIL,CLIENT_ID,AUTH_URI,TOKEN_URI,AUTH_PROVIDER_X509_CERT_URL,CLIENT_X509_CERT_URL,UNIVERSE_DOMAIN
-
-import requests
-import os
-import time
-import re
-import random
+from app.automations.log.state import log
 # from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -12,6 +7,12 @@ from google.oauth2.service_account import Credentials
 # from config.config import Config
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+
+import requests
+import os
+import time
+import re
+import random
 
 
 class SpreadSheetController:
@@ -33,8 +34,8 @@ class SpreadSheetController:
             "universe_domain": UNIVERSE_DOMAIN,
         }
 
-    def get_facebook_accounts(self):
-        print("Fetching accounts from spreadsheet...")
+    def get_facebook_accounts(self, job_id):
+        log(job_id, "Fetching accounts from spreadsheet...")
         scope = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
         creds = Credentials.from_service_account_info(self.config_dict, scopes=scope)
         try:
@@ -43,16 +44,16 @@ class SpreadSheetController:
             result = sheet.values().get(spreadsheetId=self.spreadsheet, range=self.range).execute()
             values = result.get('values', [])
             if not values:
-                print("No data found.")
+                log(job_id, "No data found.")
             else:
                 # for row in values:
                 #     print(row)  # Process each row as needed
                 return values
         except HttpError as err:
-            print(f"An error occurred: {err}")
+            log(job_id, f"An error occurred: {err}")
 
-    def get_facebook_pages(self):
-        print("Fetching pages from spreadsheet...")
+    def get_facebook_pages(self, job_id):
+        log(job_id, "Fetching pages from spreadsheet...")
         scope = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
         creds = Credentials.from_service_account_info(self.config_dict, scopes=scope)
         try:
@@ -61,13 +62,13 @@ class SpreadSheetController:
             result = sheet.values().get(spreadsheetId=self.spreadsheet, range="PAGES!A2:K").execute()
             values = result.get('values', [])
             if not values:
-                print("No data found.")
+                log(job_id, "No data found.")
             else:
                 # for row in values:
                 #     print(row)  # Process each row as needed
                 return values
         except HttpError as err:
-            print(f"An error occurred: {err}")
+            log(job_id, f"An error occurred: {err}")
     
     def get_spreadsheet_column(self, spreadsheet_id: str, tab_name: str, currency: str, insights:list, total_followers: int = 0 ,page_type: str = "page"):
         try:

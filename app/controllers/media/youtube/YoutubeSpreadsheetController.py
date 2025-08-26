@@ -15,9 +15,9 @@ from typing import Optional
 
 
 class YoutubeSpreadsheetController:
-    def __init__(self, YOUTUBE_BASE_API_URL:str):
-        self.base_url = YOUTUBE_BASE_API_URL
-        print("FacebookController initialized...")
+    def __init__(self, spreadsheet, range=None):
+        self.spreadsheet = spreadsheet
+        self.range = range if range else "ACCOUNTS!A3:I"
 
         self.config_dict = {
             "type": TYPE,
