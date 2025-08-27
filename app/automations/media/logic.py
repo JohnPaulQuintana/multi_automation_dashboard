@@ -14,6 +14,7 @@ from app.controllers.media.youtube.YoutubeController import YoutubeController
 from app.helpers.media.Client_Helper import ClientHelper
 from app.helpers.media.IG_Helper import IGHELPER
 from app.helpers.media.Facebook_Helper import FacebookHelper
+from app.helpers.media.Youtube_Helper import YoutubeHelper
 
 from app.automations.log.state import log  # ✅ import from new file
 from app.debug.line import debug_line, debug_title
@@ -221,4 +222,46 @@ def run(job_id):
             sorted_data = facebook_helper.get_sorted_posts(True)
             facebook_helper.process_facebook_insights_by_page_id(job_id, sorted_data, pages_info, spreadsheet)
             # print(sorted_data)
+
+
+        #YOUTUBE
+        if account[0].startswith("YT"):
+            chanel_insights = youtube_Controller.get_youtube_page_metrics(job_id, account[3], account[4], account[8])
+            log(job_id, chanel_insights)
+            #mathe the code for youtube channel
+            matched_info = next((item for item in pages_sp if item[0] == account[0]), None)
+            #send it to designated sheet channel level
+            if matched_info:
+                log(job_id, f"Matched info for YouTube channel: {matched_info}")
+                yt_spreadsheet.get_youtube_spreadsheet_column(job_id, YT_GAINED_SHEET_ID,matched_info[2],matched_info[1],chanel_insights,chanel_insights.get("channel", {}).get("subscribers", 0), matched_info[4])
+                log(job_id, chanel_insights)
+
+                # Access safely using .get()
+
+                monthly_insights = chanel_insights.get('monthly_insights', {})
+                monthly_views = monthly_insights.get('views', 0)
+                monthly_engagements = monthly_insights.get('engagements', 0)
+
+                client_helper._process_data(
+                            f"{matched_info[2]} {matched_info[10]}", CLIENT_SHEET_ID, matched_info[9], client_sheet, 
+                            [chanel_insights.get("channel", {}).get("subscribers", 0), monthly_views, monthly_engagements]
+                        )
+                
+                #process youtube posts insights
+                ## yt_spreadsheet.transfer_video_insight_data(extract_sheet_id(matched_info[7]), matched_info[1], chanel_insights.get("video_insights", []), chanel_insights.get("channel", {}).get("subscribers", 0))
+                if chanel_insights and isinstance(chanel_insights.get("video_insights"), list):
+                    youtube_helper = YoutubeHelper(chanel_insights["video_insights"])
+                    youtube_helper.process_youtube_insights_by_page_id(
+                        job_id, account[0], chanel_insights, matched_info, yt_spreadsheet
+                    )
+
+                else:
+                    log(job_id, f"⚠️ Skipping YouTube for {account[0]} — no valid video insights.")
+
+            else:
+                log(job_id, f"No matched info found for YouTube channel: {account[0]}")
+                continue
+        else:
+            log(job_id, f"Skipping YouTube processing for account: {account[0]}")
+
     log(job_id, "✅ Job complete")
