@@ -198,7 +198,6 @@ class FacebookController:
             return {"error": str(e)}
         
 
-
     def _get_posts_for_page(self, job_id, page_id, page_token, since, until):
         """Fetch posts for a single page with pagination handling"""
         log(job_id, f"Requesting: {page_id}")
@@ -368,5 +367,5 @@ class FacebookController:
                     for post in batch:
                         post['insights'] = self._create_empty_insights()
                         all_insights.append(post)
-                        
+
         return all_insights
