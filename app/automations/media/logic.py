@@ -1,7 +1,4 @@
 from app.config.loader import ACCOUNT_SHEET_ID, FB_GAINED_SHEET_ID, IG_GAINED_SHEET_ID, YT_GAINED_SHEET_ID, TW_GAINED_SHEET_ID, CLIENT_SHEET_ID, FACEBOOK_BASE_API_URL, YOUTUBE_BASE_API_URL, TWITTER_BASE_API_URL, SPREADSHEET_RANGE, RAJI_ACCOUNT
-# from app.constant.tracker import TRACKER_RANGE
-
-# from app.controllers.tracker.SpreadSheetController import SpreadsheetController
 from app.controllers.media.facebook.SpreadSheetController import SpreadSheetController
 from app.controllers.media.instagram.IGSpreadSheetController import IGSpreadsheetController
 from app.controllers.media.twitter.TwitterSpreadSheetController import TwitterSpreadsheetController
@@ -15,12 +12,13 @@ from app.helpers.media.Client_Helper import ClientHelper
 from app.helpers.media.IG_Helper import IGHELPER
 from app.helpers.media.Facebook_Helper import FacebookHelper
 from app.helpers.media.Youtube_Helper import YoutubeHelper
-
+from app.helpers.media.Twitter_Helper import TwitterHelper
 from app.automations.log.state import log  # ✅ import from new file
 from app.debug.line import debug_line, debug_title
-
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
+
+import time
 import json
 import os
 import re
@@ -211,7 +209,8 @@ def run(job_id):
             log(job_id, "This is IG HELPER...")
             sorted_data = ig_helper.get_sorted_posts(True)
             ig_helper.process_ig_insights_by_ig_id(job_id, sorted_data, pages_info, ig_spreadsheet)
-
+            log(job_id, f"Social Media: Instagram Finish => {account[0]}")
+            time.sleep(2)
 
             # # FACEBBOOK
             posts_data = facebookController.fetch_all_posts_for_pages(job_id, page_tokens, start_date, today_date)
@@ -221,11 +220,16 @@ def run(job_id):
             facebook_helper = FacebookHelper(all_facebook_insights)
             sorted_data = facebook_helper.get_sorted_posts(True)
             facebook_helper.process_facebook_insights_by_page_id(job_id, sorted_data, pages_info, spreadsheet)
+            log(job_id, "Social Media: Facebook Finish => {account[0]}")
+            time.sleep(2)
             # print(sorted_data)
 
 
-        #YOUTUBE
+        # YOUTUBE
         if account[0].startswith("YT"):
+            debug_title("Social Media: Youtube Running")
+            debug_line()
+            log(job_id, "Social Media: Youtube Processing")
             chanel_insights = youtube_Controller.get_youtube_page_metrics(job_id, account[3], account[4], account[8])
             log(job_id, chanel_insights)
             #mathe the code for youtube channel
@@ -254,6 +258,7 @@ def run(job_id):
                     youtube_helper.process_youtube_insights_by_page_id(
                         job_id, account[0], chanel_insights, matched_info, yt_spreadsheet
                     )
+                    log(job_id, f"Social Media: Youtube Done Processing {account[0]}")
 
                 else:
                     log(job_id, f"⚠️ Skipping YouTube for {account[0]} — no valid video insights.")
@@ -263,5 +268,84 @@ def run(job_id):
                 continue
         else:
             log(job_id, f"Skipping YouTube processing for account: {account[0]}")
+        
+        #FOR TWITTER
+        if account[0].startswith("TW"):
+            chanel_insights = twitter_Controller.fetch_channel_insights(job_id, account[3])
+            log(job_id, chanel_insights)
+            if chanel_insights:
+                rest_id = chanel_insights['rest_id']
+                # use this if the account is new to get the total
+                # current_year_media = twitter_Controller.get_current_year_media(job_id, account[3],rest_id) # Uncomment for New twt Account Data
+                current_year_media = twitter_Controller.get_current_month_media(job_id, account[3],rest_id)
+                #mathe the code for youtube channel
+                matched_info = next((item for item in pages_sp if item[0] == account[0]), None)
+
+                if current_year_media:
+                    # Analyze metrics
+                    insights = twitter_Controller.analyze_current_year_metrics(current_year_media)
+                    # print(insights)
+                    # Analyze 30days periods
+                    # recent_media = filter_media_last_30_days(current_year_media)
+
+                    
+                    # Send it to designated sheet channel level
+                    if matched_info and insights:
+                        log(job_id, f"Matched info for YouTube channel: {matched_info}")
+                        user_data = tw_spreadsheet.get_twitter_spreadsheet_column(job_id, TW_GAINED_SHEET_ID,matched_info[2],matched_info[1],insights,chanel_insights['followers_count'], matched_info[4])
+                        # print(user_data)
+                        # update client sheet with twitter monthly insights
+                        # Access using get
+                        current_month = insights.get('current_month', {})
+                        views = current_month.get('views', 0)
+                        engagements = current_month.get('engagements', 0)
+                        brand_cur = 'DEFAULT'
+                        if account[0] == "TW2":
+                            print("its a badsha...")
+                            brand_cur = f"{matched_info[1]} {matched_info[10]}"
+                        else:
+                            brand_cur = f"{matched_info[2]} {matched_info[10]}"
+
+                        client_helper._process_data(
+                            brand_cur, CLIENT_SHEET_ID, matched_info[9], client_sheet, 
+                            [chanel_insights['followers_count'], views, engagements]
+                        )
+                        #process twitter posts insights
+                        twitter_helper = TwitterHelper(current_year_media)
+                        twitter_helper.process_twitter_insights_by_page_id(
+                            job_id, account[0], chanel_insights['followers_count'], current_year_media, matched_info, tw_spreadsheet
+                        )
+                    else:
+                        log(job_id, f"No matched info found for YouTube channel: {account[0]}")
+                        continue
+
+                    log(job_id, "\nCurrent Year Insights:")
+                    log(job_id, f"Total Posts: {insights['total']['posts']}")
+                    log(job_id, f"Total Views: {insights['total']['views']}")
+                    log(job_id, f"Total Engagements: {insights['total']['engagements']}")
+                    log(job_id, f"Avg Views/Post: {insights['total']['avg_views']:.1f}")
+                    log(job_id, f"Avg Engagements/Post: {insights['total']['avg_engagements']:.1f}")
+                    
+                    # print("\nMonthly Breakdown:")
+                    # for month, stats in insights['monthly'].items():
+                    #     print(f"{month}: {stats['posts']} posts, {stats['views']} views")
+                    
+                    log(job_id, "\nCurrent Month Stats:")
+                    log(job_id, json.dumps(insights['current_month'], indent=2))
+
+                else:
+                    log("No current year media found.")
+                    insights = {
+                            "current_month": {
+                                "views": 0,
+                                "engagements": 0
+                            }
+                        }
+                    tw_spreadsheet.get_twitter_spreadsheet_column(job_id, TW_GAINED_SHEET_ID,matched_info[2],matched_info[1],insights,chanel_insights['followers_count'], matched_info[4])
+
+        else:
+            log(job_id, f"Skipping YouTube processing for account: {account[0]}")
+    
+    log(job_id, "Facebook Automation completed:")
 
     log(job_id, "✅ Job complete")
