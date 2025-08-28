@@ -214,7 +214,7 @@ class YoutubeSpreadsheetController:
                 "values": all_values
             }
         ]
-        self.safe_execute_update(lambda: sheet.values().batchUpdate(
+        self.safe_execute_update(job_id, lambda: sheet.values().batchUpdate(
             spreadsheetId=spreadsheet_id,
             body={"valueInputOption": "RAW", "data": data}
         ).execute())
@@ -262,7 +262,7 @@ class YoutubeSpreadsheetController:
                 }
             }
         ]
-        self.safe_execute_update(lambda: service.spreadsheets().batchUpdate(
+        self.safe_execute_update(job_id, lambda: service.spreadsheets().batchUpdate(
             spreadsheetId=spreadsheet_id,
             body={"requests": requests}
         ).execute())
@@ -393,7 +393,7 @@ class YoutubeSpreadsheetController:
     #tansfer insight data to Google Sheets for posts
     def trim_sheet_rows(self, job_id, spreadsheet_id: str, tab_name: str, buffer: int = 10):
         try:
-            service = self._initialize_google_sheets_service()
+            service = self._initialize_google_sheets_service(job_id)
             sheet = service.spreadsheets()
 
             metadata = sheet.get(spreadsheetId=spreadsheet_id).execute()
@@ -449,7 +449,7 @@ class YoutubeSpreadsheetController:
     def transfer_video_insight_data(self, job_id, spreadsheet_id: str, tab_name: str, insights_data: list, followers: dict, date: str = None):
         try:
             log(job_id, f"\n📅 DAILY INSIGHTS DUMP FOR {date or 'today'}")
-            service = self._initialize_google_sheets_service()
+            service = self._initialize_google_sheets_service(job_id)
             sheet = service.spreadsheets()
 
             # 1. Set up dates (YYYY-MM-DD)
@@ -604,7 +604,7 @@ class YoutubeSpreadsheetController:
                 "verticalAlignment": "MIDDLE"
             }
             # Trim the sheet to avoid breaching 10M cell limit
-            self.trim_sheet_rows(spreadsheet_id, tab_name)
+            self.trim_sheet_rows(job_id, spreadsheet_id, tab_name)
             # 6. Batch requests (insert rows + format all cells)
             requests = []
 
@@ -699,7 +699,7 @@ class YoutubeSpreadsheetController:
         
     
     def hide_old_rows(self, job_id, spreadsheet_id: str, tab_name: str):
-        service = self._initialize_google_sheets_service()
+        service = self._initialize_google_sheets_service(job_id)
         sheet = service.spreadsheets()
         
         # Get all dates in Column Q (index 16, so range Q3 down)

@@ -178,7 +178,7 @@ class YoutubeController:
             video_id, views, engaged_views, likes, comments, shares = row
             meta = video_meta.get(video_id, {})
             #format of response
-            log("\n🎬 Video:")
+            log(job_id, "\n🎬 Video:")
             log(job_id, f"🆔 ID: {video_id}")
             log(job_id, f"📅 Published: {meta.get('publishedAt', 'N/A')}")
             log(job_id, f"🔗 URL: {meta.get('url')}")
@@ -216,7 +216,7 @@ class YoutubeController:
 
         # target_date = dt(2025, 7, 5)  # to handle the skiped date issue
 
-        log(job_id, yesterday, start_month, start_year)
+        log(job_id, f"{yesterday}, {start_month}, {start_year}")
     
         # Fetch channel info (basic stats)
         channel_info = self.get_channel_info(username,api_key)
@@ -231,17 +231,17 @@ class YoutubeController:
         daily_insights = self.fetch_channel_insights(job_id, creds, "daily", yesterday, yesterday1)
         log(job_id, "=====================================================================================")
         log(job_id, "This is Daily Insights:")
-        log(job_id, daily_insights)
-        log("=====================================================================================")
+        log(job_id, f"{daily_insights}")
+        log(job_id, "=====================================================================================")
         monthly_insights = self.fetch_channel_insights(job_id, creds, "monthly", start_month, yesterday)
         log(job_id, "=====================================================================================")
         log(job_id, "This is Monhtly Insights:")
-        log(job_id, monthly_insights)
+        log(job_id, f"{monthly_insights}")
         log(job_id, "=====================================================================================")
         yearly_insights = self.fetch_channel_insights(job_id, creds, "yearly", start_year, yesterday)
         log(job_id, "=====================================================================================")
         log(job_id, "This is Yearly Insights:")
-        log(job_id, yearly_insights)
+        log(job_id, f"{yearly_insights}")
         log(job_id, "=====================================================================================")
 
         #get all the videos with insights

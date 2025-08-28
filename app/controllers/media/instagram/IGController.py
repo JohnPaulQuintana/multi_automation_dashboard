@@ -324,38 +324,38 @@ class IGController:
             key = (post['source_ig_id'], post['source_page_token'])
             page_groups[key].append(post)
 
-            # Process each page's posts
-            all_insights = []
-            for (ig_id, page_token), posts in page_groups.items():
-                log(job_id, f"Processing {len(posts)} posts for page {ig_id}")
+        # Process each page's posts
+        all_insights = []
+        for (ig_id, page_token), posts in page_groups.items():
+            log(job_id, f"Processing {len(posts)} posts for page {ig_id}")
 
-                # Process in batches of 50
-                for i in range(0, len(posts), 50):
-                    batch = posts[i:i+50]
-                    post_ids = [p['post_id'] for p in batch]
+            # Process in batches of 50
+            for i in range(0, len(posts), 50):
+                batch = posts[i:i+50]
+                post_ids = [p['post_id'] for p in batch]
 
-                    try:
-                        insights_batch = self.get_insights_batch(job_id, post_ids, page_token)
-                        log(job_id, f"Fetched insights for batch {i//50 + 1}")
+                try:
+                    insights_batch = self.get_insights_batch(job_id, post_ids, page_token)
+                    log(job_id, f"Fetched insights for batch {i//50 + 1}")
 
-                        # print(insights_batch)
-                        for post, insights in zip(batch, insights_batch):
-                            # print(f"Processing insights for post {post['post_id']}")
-                            # print(insights)
-                            body = json.loads(insights.get('body', '{}'))
-                            parsed_metrics = self._parse_insights(body.get('data', []))
-                            # post['insights'] = self._parse_insights(insights.get('data', []))
-                            # parsed = self._parse_insights(insights.get('data', []))
-                            post['insights'] = parsed_metrics
-                            # post['post_link'] = f"https://www.facebook.com/{post['source_page_id']}/posts/{post['post_id']}?view=insights"
-                            all_insights.append(post)
-                            # log(job_id, all_insights)
+                    # print(insights_batch)
+                    for post, insights in zip(batch, insights_batch):
+                        # print(f"Processing insights for post {post['post_id']}")
+                        # print(insights)
+                        body = json.loads(insights.get('body', '{}'))
+                        parsed_metrics = self._parse_insights(job_id, body.get('data', []))
+                        # post['insights'] = self._parse_insights(insights.get('data', []))
+                        # parsed = self._parse_insights(insights.get('data', []))
+                        post['insights'] = parsed_metrics
+                        # post['post_link'] = f"https://www.facebook.com/{post['source_page_id']}/posts/{post['post_id']}?view=insights"
+                        all_insights.append(post)
+                        # log(job_id, all_insights)
 
-                    except Exception as e:
-                        log(job_id, f"Error processing batch: {str(e)}")
+                except Exception as e:
+                    log(job_id, f"Error processing batch: {str(e)}")
 
-                        for post in batch:
-                            post['insights'] = self._create_empty_insights()
-                            all_insights.append(post)
+                    for post in batch:
+                        post['insights'] = self._create_empty_insights()
+                        all_insights.append(post)
         return all_insights
     

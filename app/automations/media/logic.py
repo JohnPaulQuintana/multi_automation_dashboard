@@ -123,7 +123,7 @@ def run(job_id):
                     ig_page_insights = ig_Controller.get_ig_page_metrics(job_id, page_id,ig_id,page_access_token)
                     if ig_page_insights:
                         log(job_id, "------------------------------------------------------------------------------")
-                        log(job_id, ig_page_insights)
+                        log(job_id, f"{ig_page_insights}")
                         log(job_id, "------------------------------------------------------------------------------")
 
                         #processing ig page insights
@@ -231,14 +231,14 @@ def run(job_id):
             debug_line()
             log(job_id, "Social Media: Youtube Processing")
             chanel_insights = youtube_Controller.get_youtube_page_metrics(job_id, account[3], account[4], account[8])
-            log(job_id, chanel_insights)
+            log(job_id, f"{chanel_insights}")
             #mathe the code for youtube channel
             matched_info = next((item for item in pages_sp if item[0] == account[0]), None)
             #send it to designated sheet channel level
             if matched_info:
                 log(job_id, f"Matched info for YouTube channel: {matched_info}")
                 yt_spreadsheet.get_youtube_spreadsheet_column(job_id, YT_GAINED_SHEET_ID,matched_info[2],matched_info[1],chanel_insights,chanel_insights.get("channel", {}).get("subscribers", 0), matched_info[4])
-                log(job_id, chanel_insights)
+                log(job_id, f"{chanel_insights}")
 
                 # Access safely using .get()
 
@@ -246,7 +246,7 @@ def run(job_id):
                 monthly_views = monthly_insights.get('views', 0)
                 monthly_engagements = monthly_insights.get('engagements', 0)
 
-                client_helper._process_data(
+                client_helper._process_data(job_id,
                             f"{matched_info[2]} {matched_info[10]}", CLIENT_SHEET_ID, matched_info[9], client_sheet, 
                             [chanel_insights.get("channel", {}).get("subscribers", 0), monthly_views, monthly_engagements]
                         )
@@ -334,7 +334,7 @@ def run(job_id):
                     log(job_id, json.dumps(insights['current_month'], indent=2))
 
                 else:
-                    log("No current year media found.")
+                    log(job_id, "No current year media found.")
                     insights = {
                             "current_month": {
                                 "views": 0,

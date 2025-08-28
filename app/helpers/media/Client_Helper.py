@@ -9,7 +9,7 @@ class ClientHelper:
         :return: True if successful, False otherwise.
         """
         try:
-            log(job_id, BRAND_CURRENCY, SPREADSHEET_ID, TARGET)
+            log(job_id, f"{BRAND_CURRENCY}, {SPREADSHEET_ID}, {TARGET}")
             # Process the data and update the spreadsheet
             # 1. Get your target rows (from your existing function)
             target_rows = client_sheet.batch_find_targets(
@@ -23,7 +23,7 @@ class ClientHelper:
                     }
                 }
             )[BRAND_CURRENCY]
-            log(job_id, "Target rows:", target_rows)
+            log(job_id, f"Target rows: {target_rows}")
 
             # 2. Prepare your values (example data)
             # platform_values = {

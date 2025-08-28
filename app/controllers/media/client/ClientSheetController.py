@@ -1,4 +1,4 @@
-from config.loader import TYPE,PROJECT_ID,PRIVATE_KEY_ID,PRIVATE_KEY,CLIENT_EMAIL,CLIENT_ID,AUTH_URI,TOKEN_URI,AUTH_PROVIDER_X509_CERT_URL,CLIENT_X509_CERT_URL,UNIVERSE_DOMAIN
+from app.config.loader import TYPE,PROJECT_ID,PRIVATE_KEY_ID,PRIVATE_KEY,CLIENT_EMAIL,CLIENT_ID,AUTH_URI,TOKEN_URI,AUTH_PROVIDER_X509_CERT_URL,CLIENT_X509_CERT_URL,UNIVERSE_DOMAIN
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2.service_account import Credentials
@@ -112,7 +112,7 @@ class ClientSheetController:
         except HttpError as e:
             if e.resp.status == 401:  # Unauthorized
                 log(job_id, "Reinitializing service after auth error...")
-                self._initialize_google_sheets_service()
+                self._initialize_google_sheets_service(job_id)
                 return self._safe_find_targets(job_id, spreadsheet_id, tab_name, config)
             log(job_id, f"API Error in {tab_name}: {e}")
             return {target: [] for target in config['targets']}
@@ -186,7 +186,7 @@ class ClientSheetController:
 
     def get_current_month_column(self, job_id, tab_name: str, spreadsheet_id: str) -> Optional[Tuple[int, str]]:
         """Find current month column with error handling"""
-        if not self._service and not self._initialize_google_sheets_service():
+        if not self._service and not self._initialize_google_sheets_service(job_id):
             return None
 
         current_month = datetime.now().strftime('%b').upper()
@@ -225,7 +225,7 @@ class ClientSheetController:
         Returns:
             Dictionary of {platform: success_status}
         """
-        if not self._service and not self._initialize_google_sheets_service():
+        if not self._service and not self._initialize_google_sheets_service(job_id):
             return {platform: False for platform in platform_cells}
 
         try:
