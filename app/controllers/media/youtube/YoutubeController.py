@@ -4,7 +4,6 @@ from collections import defaultdict
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from app.automations.log.state import log
-
 import requests
 import json
 import re
@@ -21,7 +20,7 @@ class YoutubeController:
 
     # Load credentials from saved token
     def load_credentials(self,token_filename):
-        token_path = os.path.join(os.path.dirname(__file__), "tokens", token_filename)
+        token_path = os.path.join(os.path.dirname(__file__), "..", "tokens", token_filename)
         token_path = os.path.abspath(token_path)
 
         with open(token_path, "rb") as token_file:
