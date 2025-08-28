@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from datetime import date as dt
 from collections import defaultdict
-import calendar
 from app.automations.log.state import log
 
+import calendar
 import requests
 import json
 import re
