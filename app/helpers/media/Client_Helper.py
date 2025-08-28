@@ -13,6 +13,7 @@ class ClientHelper:
             # Process the data and update the spreadsheet
             # 1. Get your target rows (from your existing function)
             target_rows = client_sheet.batch_find_targets(
+                job_id,
                 spreadsheet_id=SPREADSHEET_ID,
                 tab_configs={
                     f"{BRAND_CURRENCY}": {
@@ -38,6 +39,7 @@ class ClientHelper:
 
             # 4. Execute update
             results = client_sheet.update_platform_cells(
+                job_id,
                 spreadsheet_id=SPREADSHEET_ID,
                 tab_name=BRAND_CURRENCY,
                 platform_cells=platform_cells
@@ -50,5 +52,5 @@ class ClientHelper:
 
             # return True
         except Exception as e:
-            print(f"Error in ClientHelper execution: {e}")
+            log(job_id, f"Error in ClientHelper execution: {e}")
             return False
