@@ -141,7 +141,7 @@ class IGSpreadsheetController:
         ).execute()
         values = result.get('values', [])
         if not values:
-            print("No data found.")
+            log(job_id, "No data found.")
         return values
 
     # handle currency row finding
@@ -296,7 +296,7 @@ class IGSpreadsheetController:
                 return None
 
             # Find currency row
-            currency_row_index = self._find_currency_row(values, currency, page_type)
+            currency_row_index = self._find_currency_row(job_id, values, currency, page_type)
             if currency_row_index is None:
                 return None
 
@@ -330,7 +330,7 @@ class IGSpreadsheetController:
 
     def trim_sheet_rows(self, job_id, spreadsheet_id: str, tab_name: str, buffer: int = 10):
         try:
-            service = self._initialize_google_sheets_service()
+            service = self._initialize_google_sheets_service(job_id)
             sheet = service.spreadsheets()
 
             metadata = sheet.get(spreadsheetId=spreadsheet_id).execute()
@@ -444,7 +444,7 @@ class IGSpreadsheetController:
     def transfer_insight_data(self, job_id, spreadsheet_id: str, tab_name: str, insights_data: list, followers: dict, date: str = None):
         try:
             log(job_id, f"\n📅 DAILY INSIGHTS DUMP FOR {date or 'today'}")
-            service = self._initialize_google_sheets_service()
+            service = self._initialize_google_sheets_service(job_id)
             sheet = service.spreadsheets()
 
             # 1. Set up dates (YYYY-MM-DD)
@@ -678,7 +678,7 @@ class IGSpreadsheetController:
             if e.resp.status == 429:
                 log(job_id, "⏳ Rate limited - waiting 60 seconds...")
                 time.sleep(60)
-                return self.transfer_insight_data(spreadsheet_id, tab_name, insights_data, followers, date)
+                return self.transfer_insight_data(job_id, spreadsheet_id, tab_name, insights_data, followers, date)
             return False
     
         except Exception as e:
@@ -686,7 +686,7 @@ class IGSpreadsheetController:
             return False
         
     def hide_old_rows(self, job_id, spreadsheet_id: str, tab_name: str):
-        service = self._initialize_google_sheets_service()
+        service = self._initialize_google_sheets_service(job_id)
         sheet = service.spreadsheets()
         
         # Get all dates in Column Q (index 16, so range Q3 down)

@@ -207,13 +207,13 @@ class TwitterSpreadsheetController:
         sheet = service.spreadsheets()
 
         log(job_id, "Values yesterday:")
-        log(job_id, value_in_column_objects)
+        log(job_id, f"{value_in_column_objects}")
         # Values
         #default is 0 if negative
         # difference = max(0, total_followers - value_in_column_e)
         difference = total_followers - value_in_column_objects['followers']
-        log(job_id, total_followers)
-        log(job_id, insights['current_month']['engagements'])
+        log(job_id, f"{total_followers}")
+        log(job_id, f"{insights['current_month']['engagements']}")
         #daily engagements
 
         # print(f"Total Views: {insights['total']['views']}")
@@ -385,7 +385,7 @@ class TwitterSpreadsheetController:
 
     def trim_sheet_rows(self, job_id, spreadsheet_id: str, tab_name: str, buffer: int = 10):
         try:
-            service = self._initialize_google_sheets_service()
+            service = self._initialize_google_sheets_service(job_id)
             sheet = service.spreadsheets()
 
             metadata = sheet.get(spreadsheetId=spreadsheet_id).execute()
@@ -440,7 +440,7 @@ class TwitterSpreadsheetController:
     def transfer_timeline_insight_data(self, job_id, spreadsheet_id: str, tab_name: str, insights_data: list, followers: dict, date: str = None):
         try:
             log(job_id, f"\n📅 DAILY INSIGHTS DUMP FOR {date or 'today'}")
-            service = self._initialize_google_sheets_service()
+            service = self._initialize_google_sheets_service(job_id)
             sheet = service.spreadsheets()
 
             # 1. Set up dates (YYYY-MM-DD)
@@ -671,7 +671,7 @@ class TwitterSpreadsheetController:
                 spreadsheetId=spreadsheet_id,
                 body={'requests': requests}
             )
-            self.safe_execute(request)
+            self.safe_execute(job_id, request)
 
             log(job_id, f"✅ Added {len(new_rows)} centered records for {yesterday}")
             return True
@@ -681,14 +681,14 @@ class TwitterSpreadsheetController:
             if e.resp.status == 429:
                 log(job_id, "⏳ Rate limited - waiting 60 seconds...")
                 time.sleep(60)
-                return self.transfer_timeline_insight_data(spreadsheet_id, tab_name, insights_data, followers, date)
+                return self.transfer_timeline_insight_data(job_id, spreadsheet_id, tab_name, insights_data, followers, date)
             return False
         except Exception as e:
             log(job_id, f"🔴 Critical Failure: {str(e)}")
             return False
 
     def hide_old_rows(self, job_id, spreadsheet_id: str, tab_name: str):
-        service = self._initialize_google_sheets_service()
+        service = self._initialize_google_sheets_service(job_id)
         sheet = service.spreadsheets()
         
         # Get all dates in Column Q (index 16, so range Q3 down)

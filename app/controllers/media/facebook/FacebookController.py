@@ -112,7 +112,7 @@ class FacebookController:
             todaym = yesterday  # Set monthly cutoff to yesterday
             since = yesterday.replace(day=1).isoformat()
             until = yesterday.isoformat()
-            log(job_id, "📅 Date range for insights:", since, until)
+            log(job_id, f"📅 Date range for insights: {since}, {until}")
 
             insights_params = {
                 'access_token': page_access_token,
@@ -130,7 +130,7 @@ class FacebookController:
             insights_data = insights_response.json().get('data', [])
 
             log(job_id, "📊 Raw insights data:")
-            log(job_id, insights_data)
+            log(job_id, f"{insights_data}")
 
             # Step 3: Parse and aggregate insights
             metrics = {}
@@ -164,7 +164,7 @@ class FacebookController:
             # Step 4: Call your yearly aggregation function
             yearly_totals = self.get_yearly_metrics(job_id, page_id, page_access_token)
             log(job_id, "📈 Yearly totals:")
-            log(job_id, yearly_totals)
+            log(job_id, f"{yearly_totals}")
 
             # Step 5: Combine all data
             return {
@@ -242,7 +242,7 @@ class FacebookController:
 
     def fetch_all_posts_for_pages(self, job_id, page_tokens, since, until):
         log(job_id, "Page Tokens")
-        log(job_id, page_tokens)
+        log(job_id, f"{page_tokens}")
         all_posts = []
         for page_id, page_token, ig_id in page_tokens:
             try:

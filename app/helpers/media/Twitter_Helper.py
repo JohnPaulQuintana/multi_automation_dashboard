@@ -7,9 +7,36 @@ class TwitterHelper:
     def __init__(self, post_data_list: list):
         self.posts = [self._parse_post(data) for data in post_data_list]
 
+    # Parses a single post data dictionary into a structured format.
+    def _parse_post(self, data: dict):
+        engagements = data.get("engagements", {})
+        return {
+            "tweet_id": data.get("tweet_id"),
+            "created_at": data.get("created_at"),
+            "title": data.get("title"),
+            "media_url": data.get("media_url"),
+            "insights": 
+                self._parse_insights(
+                    data.get("views", 0),
+                    engagements.get("likes", 0),
+                    engagements.get("replies", 0),
+                    engagements.get("retweets", 0),
+                    engagements.get("bookmarks", 0),
+                    engagements.get("quotes", 0),
+                )
+        }
+
+    # Parses insights data from a post into a structured format.
+    def _parse_insights(self, views, likes, replies, retweets, bookmarks, quotes):
+        return {
+            "views": views,
+            "impressions": 0,
+            "reactions": sum([likes, replies, retweets, bookmarks, quotes])
+        }
+    
     def process_twitter_insights_by_page_id(self, job_id, code, followers,all_insights, pages_info, spreadsheet) -> bool:
         try:
-            log(job_id, code, pages_info)
+            log(job_id, f"{code}, {pages_info}")
             CURRENCY = pages_info[1]
             BRAND = pages_info[2]
             FOLLOWERS = followers

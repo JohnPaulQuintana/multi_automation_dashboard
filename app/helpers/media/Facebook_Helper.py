@@ -82,8 +82,8 @@ class FacebookHelper:
                 log(job_id, f"\n🔄 Processing {len(insights)} insights for {BRAND} (Page {page_id})")
                 try:
                     # spreadsheet.transfer_insight_header_only(spreadsheet_id, CURRENCY, insights)
-                    spreadsheet.transfer_insight_data(spreadsheet_id, self.get_currency(CURRENCY, BRAND), insights, FOLLOWERS)
-                    spreadsheet.hide_old_rows(spreadsheet_id, CURRENCY)
+                    spreadsheet.transfer_insight_data(job_id, spreadsheet_id, self.get_currency(CURRENCY, BRAND), insights, FOLLOWERS)
+                    spreadsheet.hide_old_rows(job_id, spreadsheet_id, CURRENCY)
 
                     print(f"✅ Insight data transfer completed for {BRAND} (IG {page_id}) Followers: {FOLLOWERS}")
                 except Exception as e:

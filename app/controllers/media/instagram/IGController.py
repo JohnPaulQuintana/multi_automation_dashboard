@@ -27,7 +27,7 @@ class IGController:
 
         insights = insights_data.get('data', [])
         if insights:
-            print(f"[INFO] {label} insights fetched successfully.")
+            log(job_id, f"[INFO] {label} insights fetched successfully.")
             for entry in insights:
                 name = entry.get('name')
                 value = entry.get('total_value', {}).get('value', 0)
@@ -143,7 +143,7 @@ class IGController:
         log(job_id, f"[INFO] Processing IG metrics for Page ID: {page_id}, IG ID: {ig_id}")
 
         if not ig_id:
-            print("[WARNING] Skipping: No IG link associated with this page.")
+            log(job_id, "[WARNING] Skipping: No IG link associated with this page.")
             return None
         
         try:
@@ -158,10 +158,10 @@ class IGController:
             data = response.json()
 
             # Fetch and attach detailed insights
-            data['daily_insights'] = self._extract_insight_metrics(
+            data['daily_insights'] = self._extract_insight_metrics(job_id, 
                 self.fetch_daily_insights(ig_id, page_tokens), label='Daily'
             )
-            data['monthly_insights'] = self._extract_insight_metrics(
+            data['monthly_insights'] = self._extract_insight_metrics(job_id,
                 self.fetch_monthly_insights(ig_id, page_tokens), label='Monthly'
             )
             yearly_data = self.get_yearly_metrics(job_id, ig_id, page_tokens)
@@ -226,7 +226,7 @@ class IGController:
 
     def fetch_all_ig_posts(self, job_id, page_tokens, since):
         log(job_id, "Page Tokens")
-        log(job_id, page_tokens)
+        log(job_id, f"{page_tokens}")
         all_posts = []
 
         for page_id, page_token, ig_id in page_tokens:
@@ -246,7 +246,7 @@ class IGController:
                         'media_url': post.get('media_url'),
                     })
             except Exception as e:
-                print(f"❌ Error processing page {page_id}: {str(e)}")
+                log(job_id, f"❌ Error processing page {page_id}: {str(e)}")
 
         return all_posts
     

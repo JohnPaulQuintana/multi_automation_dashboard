@@ -178,7 +178,8 @@ class TwitterController:
                         media["post_age"] = (end_date - post_time).days
                         rolling_window_media.append(media)
                 
-                log(job_id, f"\rPages: {page_count + 1} | 30-day Posts: {len(rolling_window_media)} | Scanned: {posts_processed}", end="", flush=True)
+                # print(f"\rPages: {page_count + 1} | 30-day Posts: {len(rolling_window_media)} | Scanned: {posts_processed}", end="", flush=True)
+                log(job_id, f"\rPages: {page_count + 1} | 30-day Posts: {len(rolling_window_media)} | Scanned: {posts_processed}")
 
                 cursor = self.extract_cursor(job_id, raw_data)
                 if not cursor or stop_pagination:
@@ -224,7 +225,7 @@ class TwitterController:
                 response.raise_for_status()
                 raw_data = response.json()
 
-                page_media = self.process_media_response(raw_data)
+                page_media = self.process_media_response(job_id, raw_data)
                 posts_processed += len(page_media)
 
                 stop_pagination = False
@@ -263,10 +264,10 @@ class TwitterController:
                     #     rolling_window_media.append(media)
                     # elif post_time < start_date:
                     #     stop_pagination = True  # We've passed the target window
+                # print(f"\rPages: {page_count + 1} | 30-day Posts: {len(rolling_window_media)} | Scanned: {posts_processed}", end="", flush=True)
+                log(job_id, f"\rPages: {page_count + 1} | 30-day Posts: {len(rolling_window_media)} | Scanned: {posts_processed}")
 
-                log(job_id, f"\rPages: {page_count + 1} | 30-day Posts: {len(rolling_window_media)} | Scanned: {posts_processed}", end="", flush=True)
-
-                cursor = self.extract_cursor(raw_data)
+                cursor = self.extract_cursor(job_id, raw_data)
                 if not cursor or stop_pagination:
                     break
 

@@ -26,7 +26,7 @@ import re
 
 def get_currency(job_id, currency, brand):
     log(job_id, "-------------------------")
-    log(job_id, currency, brand)
+    log(job_id, f"{currency}, {brand}")
     log(job_id, "-------------------------")
 
     curr = None
@@ -100,7 +100,7 @@ def run(job_id):
                 log(job_id, f"Processing account: {account[0]} with name: {account[3]} (RAJI ACCOUNT)")
                 pages['data'] = [page for page in pages.get('data', []) if page.get('name') == 'Badsha']
 
-            for page in pages.get('date', []):
+            for page in pages.get('data', []):
                 page_id = page.get('id', 0)
                 page_access_token = page.get('access_token', 'xxxxxxxxxxxxx')
                 ig = page.get('instagram_business_account', False)
@@ -127,7 +127,7 @@ def run(job_id):
                         log(job_id, "------------------------------------------------------------------------------")
 
                         #processing ig page insights
-                        ig_spreadsheet.get_ig_spreadsheet_column(job_id, IG_GAINED_SHEET_ID,brand,get_currency(currency,brand),ig_page_insights,ig_page_insights[0].get('followers_count', 0), PAGE_TYPE)        
+                        ig_spreadsheet.get_ig_spreadsheet_column(job_id, IG_GAINED_SHEET_ID,brand,get_currency(job_id,currency,brand),ig_page_insights,ig_page_insights[0].get('followers_count', 0), PAGE_TYPE)        
 
                         #update client sheet
                         # Access monthly insights safely
@@ -144,7 +144,7 @@ def run(job_id):
                             )
                         
                     # get the target column and brand name
-                    target_column = spreadsheet.get_spreadsheet_column(FB_GAINED_SHEET_ID,brand,currency,followers,followers['followers_count'], PAGE_TYPE)
+                    target_column = spreadsheet.get_spreadsheet_column(job_id, FB_GAINED_SHEET_ID,brand,currency,followers,followers['followers_count'], PAGE_TYPE)
 
                     #update client sheet
                     client_helper._process_data(
@@ -220,7 +220,7 @@ def run(job_id):
             facebook_helper = FacebookHelper(all_facebook_insights)
             sorted_data = facebook_helper.get_sorted_posts(True)
             facebook_helper.process_facebook_insights_by_page_id(job_id, sorted_data, pages_info, spreadsheet)
-            log(job_id, "Social Media: Facebook Finish => {account[0]}")
+            log(job_id, f"Social Media: Facebook Finish => {account[0]}")
             time.sleep(2)
             # print(sorted_data)
 
@@ -307,7 +307,7 @@ def run(job_id):
                             brand_cur = f"{matched_info[2]} {matched_info[10]}"
 
                         client_helper._process_data(
-                            brand_cur, CLIENT_SHEET_ID, matched_info[9], client_sheet, 
+                            job_id, brand_cur, CLIENT_SHEET_ID, matched_info[9], client_sheet, 
                             [chanel_insights['followers_count'], views, engagements]
                         )
                         #process twitter posts insights
@@ -331,7 +331,7 @@ def run(job_id):
                     #     print(f"{month}: {stats['posts']} posts, {stats['views']} views")
                     
                     log(job_id, "\nCurrent Month Stats:")
-                    log(job_id, json.dumps(insights['current_month'], indent=2))
+                    print(json.dumps(insights['current_month'], indent=2))
 
                 else:
                     log(job_id, "No current year media found.")

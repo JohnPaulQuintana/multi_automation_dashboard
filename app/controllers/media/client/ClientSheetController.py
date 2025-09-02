@@ -134,8 +134,8 @@ class ClientSheetController:
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {
                 executor.submit(
-                    job_id,
                     self._safe_find_targets,
+                    job_id,
                     spreadsheet_id,
                     tab_name,
                     config
@@ -232,7 +232,7 @@ class ClientSheetController:
             # 1. Get current month column
             month_col = self.get_current_month_column(job_id, tab_name, spreadsheet_id)
             if not month_col:
-                print("⚠️ Failed to detect current month column")
+                log(job_id, "⚠️ Failed to detect current month column")
                 return {platform: False for platform in platform_cells}
             month_letter = month_col[1]
 
