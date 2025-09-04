@@ -520,7 +520,7 @@ class BadshaController:
         while start_date <= yesterday:
             formatted_date = start_date.strftime("%d-%m-%Y")
             log(job_id, f"Processing date: {formatted_date}")
-
+            time.sleep(1)
             retries = 0
             while retries < self.max_retries:
                 try:
@@ -533,7 +533,7 @@ class BadshaController:
                         }""",
                         formatted_date
                     )
-
+                    time.sleep(1)
                     # Set endDate
                     page.evaluate(
                         """(date) => {
@@ -543,7 +543,7 @@ class BadshaController:
                         }""",
                         formatted_date
                     )
-
+                    time.sleep(1)
                     log(job_id, "Inserted Filter")
                     self.wait_for_navigation(page, job_id)
                     page.click('#queryReport')
@@ -571,8 +571,8 @@ class BadshaController:
                                 "Direct Comm.": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
                                 "Total P/L (Direct)": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
                                 "PT Win/Loss (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
-                                "Self Comm.": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
-                                "Total P/L (Self)": row.query_selector("td#userTotalselfComm").inner_text().strip(),
+                                "Self Comm.": row.query_selector("td#userTotalselfComm").inner_text().strip(),
+                                "Total P/L (Self)": row.query_selector("td#userTotalselfProfitloss").inner_text().strip(),
                                 "Company": self.get_company_value(row)
                             })
 
