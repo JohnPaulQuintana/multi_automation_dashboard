@@ -29,10 +29,17 @@ NSU_FTD_TRACKER_SHEET = os.getenv("NSU_FTD_TRACKER_SHEET")
 
 #===========================================================================
 
-#Badsha Report Automation
+# Badsha Report Automation
 BR_USERNAME = os.getenv("BR_USERNAME", "")
 BR_PASSWORD = os.getenv("BR_PASSWORD", "")
 DAILY_BO_BADSHA = os.getenv("DAILY_BO_BADSHA", "")
+
+#===========================================================================
+
+
+# WinBDT Process Automation
+WB_USERNAME = os.getenv("WB_USERNAME", "")
+WB_PASSWORD = os.getenv("WB_PASSWORD", "")
 
 #===========================================================================
 

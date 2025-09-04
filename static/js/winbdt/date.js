@@ -1,6 +1,5 @@
 document.addEventListener("alpine:init", () => {
-    Alpine.data("badshaAutomation", () => {
-
+    Alpine.data("winbdtProcessAutomation", () => {
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(today.getDate() - 1);
@@ -8,14 +7,20 @@ document.addEventListener("alpine:init", () => {
         const formatDate = (date) => date.toISOString().split("T")[0];
 
         return {
-            startDate: formatDate(today),
+            
+            startDate: formatDate(yesterday),
+            endDate: formatDate(yesterday),
+            selectedTimeGrain: "",
 
             sendToAutomation() {
                 const payload  = {
-                    startDate: this.startDate
+                    startDate: this.startDate,
+                    endDate: this.endDate,
+                    timeGrain: this.selectedTimeGrain
                 };
+
                 // Call function defined in automation.js
-                BadshaReportAutomation(payload);
+                startWinBdtProcessAutomation(payload);
             }
         }
     });
