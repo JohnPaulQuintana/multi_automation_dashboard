@@ -448,7 +448,7 @@ class spreadsheet():
                     codeDate = self.update_code_header(self.url, DAILY_BO_BADSHA_RANGE["CODE"], formatted_date)
 
                     log(job_id, f"The Date in the Sheet(CODE) has been Changed to {formatted_date}")
-                    time.sleep(4)
+                    time.sleep(2)
                     log(job_id, "Processing on the Result for Sheets(CODE, AFFILIATE, BOBADSHA, AFFIBO)")
 
                     BOBADSHA = self.bobadsha(self.url, DAILY_BO_BADSHA_RANGE["AFFILIATE"])
@@ -460,11 +460,11 @@ class spreadsheet():
                     if BOBADSHA:
                         self.write_values(job_id, self.url, DAILY_BO_BADSHA_RANGE["BOBADSHA"], BOBADSHA, codeDate, add_blank=True)
                         log(job_id, "BOBADSHA Data Insertion Completed")
-                        time.sleep(1.5)
+                        time.sleep(2.5)
                     if AFFIBO:
                         self.write_values(job_id, self.url, DAILY_BO_BADSHA_RANGE["AFFIBO"], AFFIBO, codeDate )
                         log(job_id, "AFFIBO Data Insertion Completed")
-                        time.sleep(1.5)
+                        time.sleep(2.5)
 
                     start_date += timedelta(days=1)
             except Exception as e:

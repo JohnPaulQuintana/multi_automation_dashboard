@@ -40,6 +40,7 @@ DAILY_BO_BADSHA = os.getenv("DAILY_BO_BADSHA", "")
 # WinBDT Process Automation
 WB_USERNAME = os.getenv("WB_USERNAME", "")
 WB_PASSWORD = os.getenv("WB_PASSWORD", "")
+WB_DRIVE = os.getenv("WB_DRIVE", "")
 
 #===========================================================================
 
@@ -80,3 +81,12 @@ TOKEN_URI = os.getenv("TOKEN_URI")
 AUTH_PROVIDER_X509_CERT_URL = os.getenv("AUTH_PROVIDER_X509_CERT_URL")
 CLIENT_X509_CERT_URL = os.getenv("CLIENT_X509_CERT_URL")
 UNIVERSE_DOMAIN = os.getenv("UNIVERSE_DOMAIN")
+
+# Google Drive Account
+OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID")
+OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
+OAUTH_PROJECT_ID = os.getenv("OAUTH_PROJECT_ID")
+OAUTH_AUTH_URI = os.getenv("OAUTH_AUTH_URI")
+OAUTH_TOKEN_URI = os.getenv("OAUTH_TOKEN_URI")
+OAUTH_CERT_URL = os.getenv("OAUTH_CERT_URL")
+OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI")
