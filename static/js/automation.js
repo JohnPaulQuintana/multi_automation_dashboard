@@ -304,7 +304,9 @@ const startWinBdtProcessAutomation = async (formData) => {
     }
     const {
         startDate,
-        endDate
+        endDate,
+        selectedTimeGrain
+
     } = formData;
 
     isWinBdtProcessRunning = true;
@@ -321,7 +323,8 @@ const startWinBdtProcessAutomation = async (formData) => {
             },
             body: JSON.stringify({
                 startDate,
-                endDate
+                endDate,
+                timeGrain: selectedTimeGrain
             })
         });
         const data = await res.json();

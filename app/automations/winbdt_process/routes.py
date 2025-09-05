@@ -11,6 +11,7 @@ import uuid
 class WinBdtProcessInput(BaseModel):
     startDate: str
     endDate: str
+    timeGrain: str
 router = APIRouter()
 
 # @router.get("/", response_class=HTMLResponse)
@@ -21,7 +22,7 @@ router = APIRouter()
 def start_automation(date: WinBdtProcessInput, background_tasks: BackgroundTasks):
     job_id = str(uuid.uuid4())
     job_logs[job_id] = ["🟡 Job accepted. Waiting to start..."]  # init
-    background_tasks.add_task(run, job_id, date.startDate, date.endDate)
+    background_tasks.add_task(run, job_id, date.startDate, date.endDate, date.timeGrain)
     return JSONResponse({"message": "Automation started", "job_id": job_id})
 
 @router.get("/logs/{job_id}")

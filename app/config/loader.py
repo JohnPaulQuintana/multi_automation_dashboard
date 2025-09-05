@@ -41,6 +41,8 @@ DAILY_BO_BADSHA = os.getenv("DAILY_BO_BADSHA", "")
 WB_USERNAME = os.getenv("WB_USERNAME", "")
 WB_PASSWORD = os.getenv("WB_PASSWORD", "")
 WB_DRIVE = os.getenv("WB_DRIVE", "")
+WB_WINBDT_SHEET = os.getenv("WB_WINBDT_SHEET", "")
+WB_DAILY = os.getenv("WB_DAILY", "")
 
 #===========================================================================
 

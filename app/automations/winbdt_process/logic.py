@@ -1,51 +1,62 @@
 
-from app.config.loader import WB_USERNAME, WB_PASSWORD, WB_DRIVE
+from app.config.loader import WB_USERNAME, WB_PASSWORD, WB_DRIVE, WB_WINBDT_SHEET
 # from app.constant.badsha import DAILY_BO_BADSHA_RANGE, TODAY, TODAY_DATE, YESTERDAY, TIME
 from app.api.winbdt_process.googledrive import googledrive
 from app.debug.line import debug_line, debug_title
 from app.controllers.badsha.badshaController import BadshaController
-from app.helpers.badsha.BadshaSpreadsheet import spreadsheet
+# from app.helpers.badsha.BadshaSpreadsheet import spreadsheet
 from app.controllers.winbdt_process.winbdtController import winbdtController
+from app.helpers.winbdt_process.winBdtSpreadsheet import spreadsheet
 from app.automations.log.state import log  # ✅ import from new file
 from datetime import datetime, timedelta
 
 
-def process_data(job_id, username, password, startDate, endDate, drive_url):
+def process_data(job_id, username, password, startDate, endDate, time_grain, drive_url, sheet_url):
     log(job_id, f"🚀 Starting BO Basha: {username}")
     url = "https://ag.winbdt.co/index.jsp"
-    # data = winbdtController(
-    #     username,
-    #     password,
-    #     url,
-    #     startDate,
-    #     endDate
-    # )
-    # result = data.run(job_id)
+    data = winbdtController(
+        username,
+        password,
+        url,
+        startDate,
+        endDate
+    )
+    result = data.run(job_id)
 
-    # if not (result and isinstance(result, dict) and "status" in result and result["status"] == 200):
-    #     raise ValueError(f"Scraping failed: 'No error message provided'")
+    if not (result and isinstance(result, dict) and "status" in result and result["status"] == 200):
+        raise ValueError(f"Scraping failed: 'No error message provided'")
     
     log(job_id, "Scraping Process Successfuly Completed")
 
+    debug_title("Getting GoogleSheet URL")
+    debug_line()
     gdrive = googledrive (
         drive_url,
         startDate,
-        endDate
-    ).process(job_id)
+        endDate,
+        time_grain
+    )
+    url = gdrive.process(job_id)
 
-    # log(job_id, "Preparing to Fetch Data in Spreadsheet....")
+    if not (url and isinstance(url, dict) and "status" in url and url["status"] == 200):
+        raise ValueError(f"Google Sheet Not Found: 'Invalid URL'")
+    log(job_id, "Google Sheet Located Successfuly")
 
-    # fetch_data = spreadsheet(
-    #     result,
-    #     sheet_url,
-    #     sheet_range,
-    #     startDate
+    debug_title("Fetching in GoogleSheet")
+    debug_line()
+    log(job_id, "Preparing to Fetch Data in Spreadsheet....")
 
-    # ).transfer(job_id)
+    fetch_data = spreadsheet(
+        result,
+        sheet_url,
+        url
+        # startDate
+
+    ).transfer(job_id)
 
     log(job_id, "Scraping Process is success Data has been Fetch")
 
-def run(job_id, start_date, end_date):
+def run(job_id, start_date, end_date, time_grain):
     log(job_id, "🚀 Running WinBdt Process Automation...")
     
     
@@ -70,7 +81,7 @@ def run(job_id, start_date, end_date):
     
     all_data = process_data(
         job_id,
-        WB_USERNAME, WB_PASSWORD, startDate, endDate, WB_DRIVE
+        WB_USERNAME, WB_PASSWORD, startDate, endDate, time_grain, WB_DRIVE, WB_WINBDT_SHEET
     )
 
     # for row in all_data:
