@@ -3,10 +3,9 @@ from app.config.loader import WB_USERNAME, WB_PASSWORD, WB_DRIVE, WB_WINBDT_SHEE
 # from app.constant.badsha import DAILY_BO_BADSHA_RANGE, TODAY, TODAY_DATE, YESTERDAY, TIME
 from app.api.winbdt_process.googledrive import googledrive
 from app.debug.line import debug_line, debug_title
-from app.controllers.badsha.badshaController import BadshaController
-# from app.helpers.badsha.BadshaSpreadsheet import spreadsheet
 from app.controllers.winbdt_process.winbdtController import winbdtController
 from app.helpers.winbdt_process.winBdtSpreadsheet import spreadsheet
+from app.helpers.winbdt_process.transferData import transferData
 from app.automations.log.state import log  # ✅ import from new file
 from datetime import datetime, timedelta
 
@@ -53,6 +52,19 @@ def process_data(job_id, username, password, startDate, endDate, time_grain, dri
         # startDate
 
     ).transfer(job_id)
+
+    if not (fetch_data and isinstance(fetch_data, dict) and "status" in fetch_data and fetch_data["status"] == 200):
+        return {
+            "status": "Failed",
+            "message": "Failed to Transfer or Copy data into Spreadsheet"
+        }
+    
+    transfer_data = transferData(
+        fetch_data,
+        sheet_url,
+        url,
+        startDate
+    ).transfer_data(job_id)
 
     log(job_id, "Scraping Process is success Data has been Fetch")
 

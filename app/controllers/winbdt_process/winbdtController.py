@@ -234,7 +234,7 @@ class winbdtController:
                             all_results.append(result)
                             index += 1
 
-                        total = data_total.get("deposit", 0)
+                        # total = data_total.get("deposit", 0)
                         # return filtered_results
                         
                     else:
@@ -253,7 +253,7 @@ class winbdtController:
                         break
                         
                 log(job_id, f"📌 Final Global Index Count: {index}")
-                return all_results, total  
+                return all_results
             
             except Exception as e:
                 retries += 1
@@ -261,6 +261,49 @@ class winbdtController:
 
         log(job_id, "❌ Max retries reached, returning partial data")
         return all_results, 0 
+
+    def deposit_withdrawal_total(self, page, job_id, type):
+        log(job_id, f"Getting the Grand Total For {type}")
+        retries = 0
+        total = 0
+        while retries < self.max_retries:
+            try: 
+                page.select_option("#creditAllocatedType", type)
+
+                time.sleep(.5)
+                self.wait_for_navigation(page, job_id)
+                
+                with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
+                    page.click('#searchBtn')
+
+                response = resp_info.value
+                log(job_id, "Data Result Display")
+                if "application/json" in response.headers.get("content-type", ""):
+                    data = response.json()
+                    
+                    data_total = data.get("pageInfo", {})
+                    log(job_id, "Getting the data through Network Response")
+
+                    if type.upper() == "DEPOSIT":
+                        total = data_total.get("deposit", 0)
+                    elif type.upper() == "WITHDRAW":
+                        total = data_total.get("withdraw", 0)
+                    else:
+                        log(job_id, f"⚠️ Unknown type passed: {type}")
+                        total = 0                    
+                else:
+                    html_text = response.text()
+                    log(job_id, "📄 HTML Data:", html_text)
+                    
+                
+                return total
+            
+            except Exception as e:
+                retries += 1
+                log(job_id, f"⚠️ Error during scraping attempt {retries}: {e}")
+
+        log(job_id, "❌ Max retries reached, returning partial data")
+        return total 
 
     def get_jackpot_value(self, row):
         try:
@@ -540,14 +583,16 @@ class winbdtController:
                     account_creation = self.account_creation(page, job_id)
                     log(job_id, f"Result: {account_creation}")
                     time.sleep(1)
-                    deposit_results, deposit_total = self.deposit_withdrawal(page, job_id, "DEPOSIT")
-                    log(job_id, f"Result: {deposit_results}")
-                    log(job_id, f"📊 Total Deposits Found: {deposit_total}")
+                    deposit_withdrawal = self.deposit_withdrawal(page, job_id, "ALL")
+                    log(job_id, f"Result: {deposit_withdrawal}")
                     time.sleep(1)
 
-                    withdrawal_results, withdrawal_total = self.deposit_withdrawal(page, job_id, "WITHDRAW")
-                    log(job_id, f"Result: {withdrawal_results}")
-                    log(job_id, f"📊 Total Withdrawal Found: {withdrawal_total}")
+                    deposit_total = self.deposit_withdrawal_total(page, job_id, "DEPOSIT")
+                    log(job_id, f"Total: {deposit_total}")
+                    time.sleep(1)
+
+                    withdrawal_total = self.deposit_withdrawal_total(page, job_id, "WITHDRAW")
+                    log(job_id, f"Total: {deposit_total}")
                     time.sleep(1)
 
                     overall_performance= self.overall_performance(page, job_id)
@@ -564,9 +609,8 @@ class winbdtController:
                             "title": "Fetch Completed!",
                             "icon": "success",
                             "account_creation": account_creation,
-                            "deposit_results" : deposit_results,
+                            "deposit_withdrawal_results" : deposit_withdrawal,
                             "deposit_total" : deposit_total,
-                            "withdrawal_results": withdrawal_results,
                             "withdrawal_total": withdrawal_total,
                             "overall_performance": overall_performance,
                             "provider_performance": provider_performance

@@ -4,7 +4,7 @@ env/
 backup/
 nsutracker-env/
 orig-env/
-app/controllers/media/youtube/tokens
+app/controllers/media/youtube/tokens/
 
 # Ignore Python cache and compiled files
 __pycache__/
@@ -13,3 +13,4 @@ __pycache__/
 *.pdb
 *.pyo
 *.py[cod]
+*.pickle
