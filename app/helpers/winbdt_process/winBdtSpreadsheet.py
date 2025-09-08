@@ -180,10 +180,17 @@ class spreadsheet():
 
             values = result.get("values", [])
 
-            if not values:
-                log(job_id, "No data found to copy.")
-                return
-            return values
+            cleaned_values = []
+            for value in values:
+                if value:
+                    # Use regex to remove currency symbols but keep the negative sign and digits
+                    cleaned_value = re.sub(r'[^0-9.-]', '', value[0])
+                    cleaned_values.append([cleaned_value])
+                else:
+                    # If there is no data, keep it as is (empty)
+                    cleaned_values.append([""])
+
+            return cleaned_values
         except HttpError as err:
             raise Exception(f"Google Sheets API error (Reading Row): {err}")
 

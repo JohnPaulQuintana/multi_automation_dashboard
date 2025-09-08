@@ -18,11 +18,13 @@ from collections import defaultdict
 from datetime import datetime
 
 class transferData:
-    def __init__(self, fetch_data, sheet_url, copy_url, startDate):
+    def __init__(self, fetch_data, sheet_url, copy_url, startDate, endDate, time_grain):
         self.fetch_data = fetch_data["data"]
         self.sheet_url = sheet_url
         self.copy_url = copy_url["url"]
         self.startDate = startDate
+        self.endDate = endDate
+        self.time_grain = time_grain
         
         self.scope = ["https://www.googleapis.com/auth/spreadsheets"]
         config_dict = {
@@ -52,10 +54,10 @@ class transferData:
                 return s["properties"]["sheetId"]
         raise ValueError(f"Sheet '{sheet_name}' not found")
 
-    def insert_column_header(self, sheet_id, date, weekday_name):
+    def insert_column_header(self, sheet_id, date, end, timegrain):
         """Insert a new column at E, copy format from D, and set date header (with optional hyperlink)"""
         requests = []
-        full_url = f"https://docs.google.com/spreadsheets/d/{self.sheet_url}/edit"
+        full_url = f"https://docs.google.com/spreadsheets/d/{self.copy_url}/edit"
         # Insert new column at index 4 (E column)
         requests.append({
             "insertDimension": {
@@ -92,47 +94,76 @@ class transferData:
         })
 
         # If url is provided, use HYPERLINK formula
-        header_value = {
-            "userEnteredValue": {
-                "formulaValue": f'=HYPERLINK("{full_url}","{date}")'
+        if timegrain == "Daily":
+            format_date = date.strftime("%Y%m%d")
+            weekday_name = date.strftime("%A")
+
+            header_value = {
+                "userEnteredValue": {
+                    "formulaValue": f'=HYPERLINK("{full_url}","{format_date}")'
+                }
             }
-        }
 
 
-        # Set header value in row 1, column E
-        requests.append({
-            "updateCells": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": 0,
-                    "endRowIndex": 1,
-                    "startColumnIndex": 4,
-                    "endColumnIndex": 5
-                },
-                "rows": [{"values": [header_value]}],
-                "fields": "userEnteredValue"
-            }
-        })
+            # Set header value in row 1, column E
+            requests.append({
+                "updateCells": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": 0,
+                        "endRowIndex": 1,
+                        "startColumnIndex": 4,
+                        "endColumnIndex": 5
+                    },
+                    "rows": [{"values": [header_value]}],
+                    "fields": "userEnteredValue"
+                }
+            })
 
-        # Row 2 → weekday name
-        weekday_value = {
-            "userEnteredValue": {
-                "stringValue": weekday_name
+            # Row 2 → weekday name
+            weekday_value = {
+                "userEnteredValue": {
+                    "stringValue": weekday_name
+                }
             }
-        }
-        requests.append({
-            "updateCells": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": 1,   # row 2
-                    "endRowIndex": 2,
-                    "startColumnIndex": 4,
-                    "endColumnIndex": 5
-                },
-                "rows": [{"values": [weekday_value]}],
-                "fields": "userEnteredValue"
+            requests.append({
+                "updateCells": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": 1,   # row 2
+                        "endRowIndex": 2,
+                        "startColumnIndex": 4,
+                        "endColumnIndex": 5
+                    },
+                    "rows": [{"values": [weekday_value]}],
+                    "fields": "userEnteredValue"
+                }
+            })
+
+        elif timegrain == "Weekly":
+            format_startDate = date.strftime("%Y%m%d")
+            format_endDate = end.strftime("%Y%m%d")
+            header_value = {
+                "userEnteredValue": {
+                    "formulaValue": f'=HYPERLINK("{full_url}","{format_startDate}-{format_endDate}")'
+                }
             }
-        })
+
+            # Set header value in row 1, column E
+            requests.append({
+                "updateCells": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": 0,
+                        "endRowIndex": 1,
+                        "startColumnIndex": 4,
+                        "endColumnIndex": 5
+                    },
+                    "rows": [{"values": [header_value]}],
+                    "fields": "userEnteredValue"
+                }
+            })
+
 
         # Execute requests
         self.service.spreadsheets().batchUpdate(
@@ -140,58 +171,50 @@ class transferData:
             body={"requests": requests}
         ).execute()
 
-    def insert_data(self, sheet_id, values):
-        """
-        Insert fetch_data starting from row 3 (index 2 in API),
-        into the newly inserted column E.
-        """
-        requests = []
+    def insert_data(self, sheet_name, values):
+        """Insert data starting from row 3 in column E, preserving formulas."""
         clean_values = []
         for v in values:
-            if isinstance(v, list):          # e.g. ['1']
-                if v:                        # non-empty
-                    clean_values.append(str(v[0]))
-                else:
-                    clean_values.append("")  # empty cell
-            else:
-                clean_values.append(str(v))
-        # Convert fetch_data into row values
-        # Assuming fetch_data is a list of values (one per row)
-        rows = [{"values": [{"userEnteredValue": {"stringValue": str(v)}}]} for v in clean_values]
+            if isinstance(v, list) and v:   # already a list with value
+                clean_values.append([str(v[0])])
+            elif isinstance(v, list):      # empty list
+                clean_values.append([""])
+            else:                          # scalar value
+                clean_values.append([str(v)])
 
-        requests.append({
-            "updateCells": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": 2,   # Row 3 in Google Sheets
-                    "startColumnIndex": 4, # Column E
-                    "endColumnIndex": 5
-                },
-                "rows": rows,
-                "fields": "userEnteredValue"
-            }
-        })
+        body = {"values": clean_values}
 
-        self.service.spreadsheets().batchUpdate(
+        self.service.spreadsheets().values().update(
             spreadsheetId=self.sheet_url,
-            body={"requests": requests}
+            range=f"'{sheet_name}'!E3",  # sheet_name, not sheet_id
+            valueInputOption="USER_ENTERED",
+            body=body
         ).execute()
+
 
 
     def transfer_data(self, job_id):
         log(job_id, f"Transferring into Live Docs....")
         date = datetime.strptime(self.startDate, "%d-%m-%Y")
-        format_date = date.strftime("%Y%m%d")
-        weekday_name = date.strftime("%A")  
+        end = datetime.strptime(self.endDate, "%d-%m-%Y")
+        
+        if self.time_grain.lower() in ["day", "daily"]:
+            timegrain = "Daily"
+        elif self.time_grain.lower() in ["week", "weekly"]:
+            timegrain = "Weekly"
+        elif self.time_grain.lower() in ["month", "monthly"]:
+            timegrain = "Monthly"
+        else:
+            timegrain = "Daily"  
 
         # self.fetch_data
 
-        sheet_id = self.get_sheet_id("Daily")
+        sheet_id = self.get_sheet_id(timegrain)
 
 
-        self.insert_column_header(sheet_id, format_date, weekday_name)
+        self.insert_column_header(sheet_id, date, end, timegrain)
 
-        self.insert_data(sheet_id, self.fetch_data)
+        self.insert_data(timegrain, self.fetch_data)
 
 
         log(job_id, f"Full URL: https://docs.google.com/spreadsheets/d/{self.sheet_url}/edit ")

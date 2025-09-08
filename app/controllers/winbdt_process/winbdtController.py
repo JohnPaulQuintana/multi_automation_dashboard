@@ -377,77 +377,76 @@ class winbdtController:
 
         # Loop from yesterday back to start_date
         # current_date = yesterday
-        while start_date <= end_dates:
-            formatted_date = start_date.strftime("%d-%m-%Y")
-            log(job_id, f"Processing date: {formatted_date}")
+        
+        formatted_startDate = start_date.strftime("%d-%m-%Y")
+        formatted_endDate = end_dates.strftime("%d-%m-%Y")
+        log(job_id, f"Processing date: {formatted_startDate} - {formatted_endDate}")
 
-            retries = 0
-            while retries < self.max_retries:
-                try:
-                    # Set startDate
-                    page.evaluate(
-                        """(date) => {
-                            let el = document.querySelector('#startDate');
-                            el.value = date;
-                            el.dispatchEvent(new Event('change', { bubbles: true }));
-                        }""",
-                        formatted_date
-                    )
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                # Set startDate
+                page.evaluate(
+                    """(date) => {
+                        let el = document.querySelector('#startDate');
+                        el.value = date;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }""",
+                    formatted_startDate
+                )
 
-                    # Set endDate
-                    page.evaluate(
-                        """(date) => {
-                            let el = document.querySelector('#endDate');
-                            el.value = date;
-                            el.dispatchEvent(new Event('change', { bubbles: true }));
-                        }""",
-                        formatted_date
-                    )
+                # Set endDate
+                page.evaluate(
+                    """(date) => {
+                        let el = document.querySelector('#endDate');
+                        el.value = date;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }""",
+                    formatted_endDate
+                )
 
-                    log(job_id, "Inserted Filter")
-                    self.wait_for_navigation(page, job_id)
-                    page.click('#queryReport')
-                    time.sleep(5)
+                log(job_id, "Inserted Filter")
+                self.wait_for_navigation(page, job_id)
+                page.click('#queryReport')
+                time.sleep(5)
 
-                    page.wait_for_selector("#tbodyAgent tr#tempTitle")
+                page.wait_for_selector("#tbodyAgent tr#tempTitle")
 
-                    rows = page.query_selector_all("#tbodyAgent tr#tempTitle")
-                    data = []
+                rows = page.query_selector_all("#tbodyAgent tr#tempTitle")
+                data = []
 
-                    for row in rows:
-                        cols = [cell.inner_text().strip() for cell in row.query_selector_all("td")]
-                        if len(cols) >= 3:
-                            data.append({
-                                # "Date": datetime.strptime(formatted_date, "%d-%m-%Y").strftime("%b %d %Y"),
-                                "User ID": row.query_selector("td a#titleUseID").inner_text().strip(),
-                                "Name": row.query_selector('td[data-type="name"]').inner_text().strip(),
-                                "Valid Turnover": row.query_selector("td#userTotalPlTurnover").inner_text().strip(),
-                                "Active Player": row.query_selector("td span#userTotalActivePlayer").inner_text().strip(),
-                                "Win/loss": row.query_selector("td div.member span#userTotalPlWinloss").inner_text().strip(),
-                                "Jackpot Win/Loss": self.get_jackpot_value(row),
-                                "Member Comm.": row.query_selector("td#userTotalPlComm").inner_text().strip(),
-                                "Total P/L": row.query_selector("td#userTotalPlProfitloss").inner_text().strip(),
-                                "PT Win/Loss": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
-                                "Direct Comm.": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
-                                "Total P/L (Direct)": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
-                                "PT Win/Loss (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
-                                "Self Comm.": row.query_selector("td#userTotalselfComm").inner_text().strip(),
-                                "Total P/L (Self)": row.query_selector("td#userTotalselfProfitloss").inner_text().strip(),
-                                "Company": self.get_company_value(row)
-                            })
+                for row in rows:
+                    cols = [cell.inner_text().strip() for cell in row.query_selector_all("td")]
+                    if len(cols) >= 3:
+                        data.append({
+                            # "Date": datetime.strptime(formatted_date, "%d-%m-%Y").strftime("%b %d %Y"),
+                            "User ID": row.query_selector("td a#titleUseID").inner_text().strip(),
+                            "Name": row.query_selector('td[data-type="name"]').inner_text().strip(),
+                            "Valid Turnover": row.query_selector("td#userTotalPlTurnover").inner_text().strip(),
+                            "Active Player": row.query_selector("td span#userTotalActivePlayer").inner_text().strip(),
+                            "Win/loss": row.query_selector("td div.member span#userTotalPlWinloss").inner_text().strip(),
+                            "Jackpot Win/Loss": self.get_jackpot_value(row),
+                            "Member Comm.": row.query_selector("td#userTotalPlComm").inner_text().strip(),
+                            "Total P/L": row.query_selector("td#userTotalPlProfitloss").inner_text().strip(),
+                            "PT Win/Loss": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
+                            "Direct Comm.": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
+                            "Total P/L (Direct)": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
+                            "PT Win/Loss (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
+                            "Self Comm.": row.query_selector("td#userTotalselfComm").inner_text().strip(),
+                            "Total P/L (Self)": row.query_selector("td#userTotalselfProfitloss").inner_text().strip(),
+                            "Company": self.get_company_value(row)
+                        })
 
-                    all_results.extend(data)
-                    break  # ✅ exit retry loop if successful
+                all_results.extend(data)
+                break  # ✅ exit retry loop if successful
 
-                except Exception as e:
-                    retries += 1
-                    log(job_id, f"Retry {retries}/{self.max_retries} failed for date {formatted_date}: {e}")
-                    if retries >= self.max_retries:
-                        log(job_id, f"Failed to scrape data for {formatted_date} after several attempts.")
-                        break
+            except Exception as e:
+                retries += 1
+                log(job_id, f"Retry {retries}/{self.max_retries} failed for date {formatted_startDate}: {e}")
+                if retries >= self.max_retries:
+                    log(job_id, f"Failed to scrape data for {formatted_startDate} after several attempts.")
+                    break
 
-            # Move one day back
-            start_date += timedelta(days=1)
         return all_results
 
     def provider_performance(self, page, job_id):
@@ -467,75 +466,74 @@ class winbdtController:
 
         # Loop from yesterday back to start_date
         # current_date = yesterday
-        while start_date <= end_dates:
-            formatted_date = start_date.strftime("%d-%m-%Y")
-            log(job_id, f"Processing date: {formatted_date}")
 
-            retries = 0
-            while retries < self.max_retries:
-                try:
-                    # Set startDate
-                    page.evaluate(
-                        """(date) => {
-                            let el = document.querySelector('#startDate');
-                            el.value = date;
-                            el.dispatchEvent(new Event('change', { bubbles: true }));
-                        }""",
-                        formatted_date
-                    )
-                    time.sleep(1.5)
-                    # Set endDate
-                    page.evaluate(
-                        """(date) => {
-                            let el = document.querySelector('#endDate');
-                            el.value = date;
-                            el.dispatchEvent(new Event('change', { bubbles: true }));
-                        }""",
-                        formatted_date
-                    )
-                    time.sleep(1.5)
+        formatted_startDate = start_date.strftime("%d-%m-%Y")
+        formatted_endDate = end_dates.strftime("%d-%m-%Y")
+        log(job_id, f"Processing date: {formatted_startDate} - {formatted_endDate}")
 
-                    log(job_id, "Inserted Filter")
-                    self.wait_for_navigation(page, job_id)
-                    page.click('#queryReport')
-                    time.sleep(5)
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                # Set startDate
+                page.evaluate(
+                    """(date) => {
+                        let el = document.querySelector('#startDate');
+                        el.value = date;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }""",
+                    formatted_startDate
+                )
+                time.sleep(1.5)
+                # Set endDate
+                page.evaluate(
+                    """(date) => {
+                        let el = document.querySelector('#endDate');
+                        el.value = date;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }""",
+                    formatted_endDate
+                )
+                time.sleep(1.5)
 
-                    page.wait_for_selector("#tbodyAgent tr#tempTitle")
+                log(job_id, "Inserted Filter")
+                self.wait_for_navigation(page, job_id)
+                page.click('#queryReport')
+                time.sleep(5)
 
-                    rows = page.query_selector_all("#tbodyAgent tr#tempTitle")
-                    data = []
+                page.wait_for_selector("#tbodyAgent tr#tempTitle")
 
-                    for row in rows:
-                        cols = [cell.inner_text().strip() for cell in row.query_selector_all("td")]
-                        if len(cols) >= 3:
-                            data.append({
-                                # "Date": datetime.strptime(formatted_date, "%d-%m-%Y").strftime("%b %d %Y"),
-                                "Product": row.query_selector("td span#titleUseID").inner_text().strip(),
-                                # "RTp($)": row.query_selector('td[data-type="name"]').inner_text().strip(),
-                                "Valid Turnover": row.query_selector("td#userTotalPlTurnover").inner_text().strip(),
-                                "Active Player": row.query_selector("td span#userTotalActivePlayer").inner_text().strip(),
-                                "Win/loss": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
-                                "Jackpot Win/Loss": row.query_selector("td#userTotaldownlineJackpot").inner_text().strip(),
-                                "Member Comm.": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
-                                "Total P/L": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
-                                "PT Win/Loss (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
-                                "Self Comm.": row.query_selector("td#userTotalselfComm").inner_text().strip(),
-                                "Total P/L (Self)": row.query_selector("td#userTotalselfProfitloss").inner_text().strip(),
-                                # "Company": self.get_company_value(row)
-                            })
+                rows = page.query_selector_all("#tbodyAgent tr#tempTitle")
+                data = []
 
-                    all_results.extend(data)
-                    break  # ✅ exit retry loop if successful
+                for row in rows:
+                    cols = [cell.inner_text().strip() for cell in row.query_selector_all("td")]
+                    if len(cols) >= 3:
+                        data.append({
+                            # "Date": datetime.strptime(formatted_date, "%d-%m-%Y").strftime("%b %d %Y"),
+                            "Product": row.query_selector("td span#titleUseID").inner_text().strip(),
+                            # "RTp($)": row.query_selector('td[data-type="name"]').inner_text().strip(),
+                            "Valid Turnover": row.query_selector("td#userTotalPlTurnover").inner_text().strip(),
+                            "Active Player": row.query_selector("td span#userTotalActivePlayer").inner_text().strip(),
+                            "Win/loss": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
+                            "Jackpot Win/Loss": row.query_selector("td#userTotaldownlineJackpot").inner_text().strip(),
+                            "Member Comm.": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
+                            "Total P/L": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
+                            "PT Win/Loss (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
+                            "Self Comm.": row.query_selector("td#userTotalselfComm").inner_text().strip(),
+                            "Total P/L (Self)": row.query_selector("td#userTotalselfProfitloss").inner_text().strip(),
+                            # "Company": self.get_company_value(row)
+                        })
 
-                except Exception as e:
-                    retries += 1
-                    log(job_id, f"Retry {retries}/{self.max_retries} failed for date {formatted_date}: {e}")
-                    if retries >= self.max_retries:
-                        log(job_id, f"Failed to scrape data for {formatted_date} after several attempts.")
-                        break
+                all_results.extend(data)
+                break  # ✅ exit retry loop if successful
 
-            # Move one day back
-            start_date += timedelta(days=1)
+            except Exception as e:
+                retries += 1
+                log(job_id, f"Retry {retries}/{self.max_retries} failed for date {formatted_startDate}: {e}")
+                if retries >= self.max_retries:
+                    log(job_id, f"Failed to scrape data for {formatted_startDate} after several attempts.")
+                    break
+
         return all_results
 
     def run(self, job_id):

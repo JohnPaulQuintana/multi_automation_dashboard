@@ -63,7 +63,9 @@ def process_data(job_id, username, password, startDate, endDate, time_grain, dri
         fetch_data,
         sheet_url,
         url,
-        startDate
+        startDate,
+        endDate,
+        time_grain
     ).transfer_data(job_id)
 
     log(job_id, "Scraping Process is success Data has been Fetch")

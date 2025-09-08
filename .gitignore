@@ -5,6 +5,7 @@ backup/
 nsutracker-env/
 orig-env/
 app/controllers/media/youtube/tokens/
+app/api/winbdt_process/token.pickle
 
 # Ignore Python cache and compiled files
 __pycache__/
@@ -14,4 +15,4 @@ __pycache__/
 *.pyo
 *.py[cod]
 *.pickle
-app/api/winbdt_process/token.pickle
+
