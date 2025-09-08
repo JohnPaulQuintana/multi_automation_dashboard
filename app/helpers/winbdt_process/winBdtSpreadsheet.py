@@ -66,14 +66,7 @@ class spreadsheet():
             cleaned.append(v)
         return cleaned
 
-    def total_top_ups(self, copy_url, sheet_name, values):
-        self.service.spreadsheets().values().update(
-            spreadsheetId=copy_url,
-            range=f"{sheet_name}!B10",
-            valueInputOption="USER_ENTERED",
-            body=values
-        ).execute()
-
+    
     def batch_insert_values(self, copy_url, data_dict):
         """
         Insert multiple datasets into different sheets in ONE API call.
@@ -86,10 +79,7 @@ class spreadsheet():
                     continue
 
                 # Find first empty row for this sheet
-                if sheet_name == "SUMMARY":
-                    start_row = self.total_top_ups(copy_url, sheet_name, values)
-                else:
-                    start_row = self.get_first_empty_row(copy_url, sheet_name, col="A", start_row=1)
+                start_row = self.get_first_empty_row(copy_url, sheet_name, col="A", start_row=1)
 
 
                 requests.append({
@@ -110,7 +100,93 @@ class spreadsheet():
         except HttpError as err:
             raise Exception(f"Google Sheets API error (batch_insert_values): {err}")
 
+    def get_row(self, copy_url, sheet_name, col, start_row, item=None):
+        """
+        Find the row number in a Google Sheet where the given column matches `match`.
+
+        Args:
+            copy_url (str): Spreadsheet ID
+            sheet_name (str): The sheet/tab name
+            col (str): Column letter to search in (default "A")
+            start_row (int): Row number to start searching from (default 1)
+            match (str): The value to search for
+
+        Returns:
+            int: The row number (1-based, as in Sheets), or None if not found
+        """
+        try:
+            result = self.service.spreadsheets().values().get(
+                spreadsheetId=copy_url,
+                range=f"{sheet_name}!{col}{start_row}:{col}"  # read from row 1 downward
+            ).execute()
+
+            values = result.get("values", [])
+
+            for i, row in enumerate(values, start=start_row):
+                if row and row[0] == item:
+                    return i
+            return None  # not found
+        except HttpError as err:
+            raise Exception(f"Google Sheets API error (get_first_empty_row): {err}")
+        
+    def deposit_withdrawal_batch(self, copy_url, items):
+        """
+        Batch update deposit/withdrawal values into Google Sheet.
+
+        Args:
+            copy_url (str): Spreadsheet ID
+            items (list): List of tuples in format (sheet_name, value, match_string)
+        """
+        try:
+            requests = []
+
+            for sheet_name, value, match in items:
+                # Find the row in col A matching the label
+                row = self.get_row(copy_url, sheet_name, col="A", start_row=1, item=match)
+
+                if row is None:
+                    raise Exception(f"Match '{match}' not found in column A of {sheet_name}")
+
+                # Always ensure value is a list of lists
+                if not isinstance(value, list):
+                    value = [[value]]
+                elif not isinstance(value[0], list):
+                    value = [value]
+
+                requests.append({
+                    "range": f"{sheet_name}!B{row}",
+                    "values": value
+                })
+
+            if requests:
+                body = {
+                    "valueInputOption": "USER_ENTERED",
+                    "data": requests
+                }
+                self.service.spreadsheets().values().batchUpdate(
+                    spreadsheetId=copy_url,
+                    body=body
+                ).execute()
+
+        except HttpError as err:
+            raise Exception(f"Google Sheets API error (deposit_withdrawal_batch): {err}")
     
+    def copy_summary_data(self, job_id, copy_url, sheet_name):
+        try:
+            result = self.service.spreadsheets().values().get(
+                spreadsheetId=copy_url,
+                range=f"{sheet_name}!B3:B"  # read from row B3 downward
+            ).execute()
+
+            values = result.get("values", [])
+
+            if not values:
+                log(job_id, "No data found to copy.")
+                return
+            return values
+        except HttpError as err:
+            raise Exception(f"Google Sheets API error (Reading Row): {err}")
+
     def transfer(self, job_id):
         try:
             log(job_id, "📤 Starting data transfer to spreadsheet...")
@@ -119,33 +195,48 @@ class spreadsheet():
 
             log(job_id,"Preparing Data")
             account_creation = self.data.get("account_creation", [])
-            deposit_results = self.data.get("deposit_results", [])
+            deposit_withdrawal_results = self.data.get("deposit_withdrawal_results", [])
             deposit_total = self.data.get("deposit_total", [])
-            withdrawal_results = self.data.get("withdrawal_results", [])
             withdrawal_total = self.data.get("withdrawal_total", [])
             overall_performance = self.data.get("overall_performance", [])
             provider_performance = self.data.get("provider_performance", [])
 
-
             # --- Convert dicts → lists of values (remove keys) ---
             account_creation_value = [self.clean_entry(entry) for entry in account_creation]
-            deposit_results_value = [self.clean_entry(entry) for entry in deposit_results]
-            deposit_total_value = [self.clean_entry(entry) for entry in deposit_total]
+            deposit_withdrawal_value = [self.clean_entry(entry) for entry in deposit_withdrawal_results]
+            # deposit_total_value = [self.clean_entry(entry) for entry in deposit_total]
             # withdrawal_results_value = [self.clean_entry(entry) for entry in withdrawal_results]
             overall_performance_value = [self.clean_entry(entry) for entry in overall_performance]
             provider_performance_value = [self.clean_entry(entry) for entry in provider_performance]
             log(job_id, "Data is Fetching in Spreadsheet")
             self.batch_insert_values(self.copy_url, {
-                WINBDT_RANGE["SUMMARY"]: deposit_total_value,
                 WINBDT_RANGE["AccountCreation"]: account_creation_value,
-                WINBDT_RANGE["DepositWithdrawal"]: deposit_results_value,
+                WINBDT_RANGE["DepositWithdrawal"]: deposit_withdrawal_value,
                 WINBDT_RANGE["OverallPerformance"]: overall_performance_value,
                 WINBDT_RANGE["ProviderPerformance"]: provider_performance_value,
             })
 
-            
+            self.deposit_withdrawal_batch(
+                self.copy_url,
+                [
+                    (WINBDT_RANGE["SUMMARY"], deposit_total, "Total Top Ups"),
+                    (WINBDT_RANGE["SUMMARY"], withdrawal_total, "Total Withdrawals"),
+                ]
+            )
 
-            log(job_id, "✅ Transfer completed successfully.")
+
+            data = self.copy_summary_data(job_id, self.copy_url, WINBDT_RANGE["SUMMARY"])
+
+            if not data:
+                return {
+                    "status": 204,
+                    "message": "Coudn't Copy the Data"
+                }
+
+            return {
+                "status": 200,
+                "data": data
+            }
         except Exception as e:
             log(job_id, f"❌ Transfer failed due to error: {e}")
             return {"status": "Failed"}
