@@ -1,4 +1,4 @@
-from app.config.loader import OAUTH_AUTH_URI, OAUTH_CERT_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_PROJECT_ID, OAUTH_REDIRECT_URI, OAUTH_TOKEN_URI, WB_DRIVE, WB_DAILY, WB_WEEKLY
+from app.config.loader import OAUTH_AUTH_URI, OAUTH_CERT_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_PROJECT_ID, OAUTH_REDIRECT_URI, OAUTH_TOKEN_URI, WB_DRIVE, WB_DAILY, WB_WEEKLY, WB_MONTHLY
 import os
 import pickle
 from datetime import datetime
@@ -95,6 +95,9 @@ class googledrive:
         year_id = self.get_subfolder_id(job_id, grain_id, year_name)
 
         # Step 3: Month-Year
+        if self.time_grain.lower() in ["month", "monthly"]:
+            return year_id
+        
         month_year_name = date_start.strftime("%m'%y")  # e.g. "09-2025"
         log(job_id, f"Navigating on {month_year_name} folder")
         dest_id = self.get_subfolder_id(job_id, year_id, month_year_name)
@@ -107,18 +110,25 @@ class googledrive:
         date_end = datetime.strptime(self.endDate, "%d-%m-%Y")
         startDate = date_start.strftime("%Y%m%d")
         endDate = date_end.strftime("%Y%m%d")
+        monthDate = date_start.strftime("%m%y")
         # ROOT_FOLDER_ID = "1c9QnT9lRCqbn0D960E357Ypa3ezMxi0f"
 
         # ✅ Map self.time_grain → folder name
         if self.time_grain.lower() in ["day", "daily"]:
             folder_name = "Daily"
             SOURCE_FILE_ID = WB_DAILY
+            file_name = f"WinBDT - {startDate} {folder_name} Business Performance Template"
+
         elif self.time_grain.lower() in ["week", "weekly"]:
             folder_name = "Weekly"
             SOURCE_FILE_ID = WB_WEEKLY
+            file_name = f"WinBDT - {startDate} {folder_name} Business Performance Template"
+
         elif self.time_grain.lower() in ["month", "monthly"]:
             folder_name = "Monthly"
-            SOURCE_FILE_ID = WB_DAILY
+            SOURCE_FILE_ID = WB_MONTHLY
+            file_name = f"WinBDT - {monthDate} {folder_name} Business Performance Template"
+
         else:
             folder_name = "Misc"
 
@@ -128,21 +138,12 @@ class googledrive:
         
         # DEST_FOLDER_ID = "1o0KajmupdO_BpKexgXoibn3OBXnRVT-V"
 
-        if self.time_grain.lower() in ["day", "daily"]:
-            copy_metadata = {
-                "name": f"WinBDT - {startDate} {folder_name} Business Performance Template",
-                "parents": [DEST_FOLDER_ID],  # folder ID only
-            }
-        elif self.time_grain.lower() in ["week", "weekly"]:
-            copy_metadata = {
-                "name": f"WinBDT - {startDate}-{endDate} {folder_name} Business Performance Template",
-                "parents": [DEST_FOLDER_ID],  # folder ID only
-            }
-        elif self.time_grain.lower() in ["month", "monthly"]:
-            copy_metadata = {
-                "name": f"WinBDT - {startDate}-{endDate} {folder_name} Business Performance Template",
-                "parents": [DEST_FOLDER_ID],  # folder ID only
-            }
+    
+        copy_metadata = {
+            "name": file_name,
+            "parents": [DEST_FOLDER_ID],  # folder ID only
+        }
+        
 
 
         try:

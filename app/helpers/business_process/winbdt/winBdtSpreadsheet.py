@@ -17,7 +17,7 @@ import re
 from collections import defaultdict
 from datetime import datetime
 
-class spreadsheet():
+class winBdtSpreadsheet():
     def __init__(self, data, live_url, copy_url):
         self.data = data
         self.live_url = live_url
@@ -99,6 +99,45 @@ class spreadsheet():
 
         except HttpError as err:
             raise Exception(f"Google Sheets API error (batch_insert_values): {err}")
+        
+    def insert_account_creation(self, copy_url, values):
+        """
+        Insert AccountCreation data separately (always as plain text, preserving
+        leading zeros and preventing scientific notation).
+        """
+        try:
+            if not values:
+                return {"status": 204, "message": "No AccountCreation data to insert"}
+
+            def protect_value(val):
+                val_str = str(val)
+                return val_str  # always keep as plain string
+
+            safe_values = [[protect_value(value) for value in row] for row in values]
+
+            start_row = self.get_first_empty_row(
+                copy_url, WINBDT_RANGE["AccountCreation"], col="A", start_row=1
+            )
+
+            body = {
+                "valueInputOption": "RAW",  # <-- keep exact plain text, no formatting
+                "data": [{
+                    "range": f"{WINBDT_RANGE['AccountCreation']}!A{start_row}",
+                    "values": safe_values
+                }]
+            }
+
+            self.service.spreadsheets().values().batchUpdate(
+                spreadsheetId=copy_url,
+                body=body
+            ).execute()
+
+            return {"status": 200, "message": "AccountCreation inserted successfully"}
+
+        except HttpError as err:
+            raise Exception(f"Google Sheets API error (insert_account_creation): {err}")
+
+
 
     def get_row(self, copy_url, sheet_name, col, start_row, item=None):
         """
@@ -184,7 +223,7 @@ class spreadsheet():
             for value in values:
                 if value:
                     # Use regex to remove currency symbols but keep the negative sign and digits
-                    cleaned_value = re.sub(r'[^0-9.-]', '', value[0])
+                    cleaned_value = re.sub(r'[^0-9.%\-]', '', value[0])
                     cleaned_values.append([cleaned_value])
                 else:
                     # If there is no data, keep it as is (empty)
@@ -217,11 +256,13 @@ class spreadsheet():
             provider_performance_value = [self.clean_entry(entry) for entry in provider_performance]
             log(job_id, "Data is Fetching in Spreadsheet")
             self.batch_insert_values(self.copy_url, {
-                WINBDT_RANGE["AccountCreation"]: account_creation_value,
                 WINBDT_RANGE["DepositWithdrawal"]: deposit_withdrawal_value,
                 WINBDT_RANGE["OverallPerformance"]: overall_performance_value,
                 WINBDT_RANGE["ProviderPerformance"]: provider_performance_value,
             })
+
+            if account_creation_value:
+                self.insert_account_creation(self.copy_url, account_creation_value)
 
             self.deposit_withdrawal_batch(
                 self.copy_url,

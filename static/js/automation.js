@@ -3,14 +3,12 @@ let isSocialMediaRunning = false;
 let isBusinessProcessRunning = false;
 let isNsuFtdTrackerRunning = false;
 let isBadshaReportRunning = false;
-let isWinBdtProcessRunning = false;
 
 const conversionBtn = document.getElementById("conversionBtn");
 const mediaBtn = document.getElementById("mediaBtn");
 const businessBtn = document.getElementById("businessBtn");
 const nsuftdBtn = document.getElementById("nsuftdBtn");
 const badshaBtn = document.getElementById("badshaBtn")
-const windbdtBtn = document.getElementById("winbdtBtn");
 const logPanel = document.getElementById("job-log-panel");
 const logContent = document.getElementById("job-log-content");
 
@@ -58,15 +56,12 @@ const interval = setInterval(async () => {
         localStorage.removeItem("nsuFtdTrackerJobId");
         localStorage.removeItem("badshaReportRunning");
         localStorage.removeItem("badshaReportJobId");
-        localStorage.removeItem("winBdtProcessRunning");
-        localStorage.removeItem("winBdtProcessJobId");
 
         isConversionRunning = false;
         isSocialMediaRunning = false;
         isBusinessProcessRunning = false;
         isNsuFtdTrackerRunning = false;
         isBadshaReportRunning = false;
-        isWinBdtProcessRunning = false;
 
         conversionBtn.disabled = false;
         conversionBtn.textContent = "Start Conversion";
@@ -82,9 +77,6 @@ const interval = setInterval(async () => {
 
         badshaBtn.disabled = false;
         badshaBtn.textContent = "Start Badsha"
-
-        windbdtBtn.disabled = false;
-        windbdtBtn.textContent = "Start WinBDT"
     }
 
     } catch (err) {
@@ -296,53 +288,7 @@ const BadshaReportAutomation = async (formData) => {
     }
 };
 
-// WinBdt Process Button Action
-const startWinBdtProcessAutomation = async (formData) => {
-    if (isWinBdtProcessRunning || localStorage.getItem("winBdtProcessRunning") === "true") {
-        console.log("WinBdt Process is already running.")
-        return;
-    }
-    const {
-        startDate,
-        endDate,
-        selectedTimeGrain
 
-    } = formData;
-
-    isWinBdtProcessRunning = true;
-    localStorage.setItem("winBdtProcessRunning", "true");
-
-    windbdtBtn.disabled = true;
-    windbdtBtn.textContent = "Processing...";
-
-    try {
-        const res = await fetch("/api/v1/winbdt/start", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                startDate,
-                endDate,
-                timeGrain: selectedTimeGrain
-            })
-        });
-        const data = await res.json();
-        console.log("WinBDT Process Done: ", data);
-        if (data.job_id) {
-            localStorage.setItem("winBdtProcessJobId", data.job_id);
-            pollLogs(data.job_id, "winbdt");
-        }
-
-        console.log("WinBDT Process Started Succesfully..");
-        localStorage.removeItem("winBdtProcessRunning")
-    } catch (err) {
-        console.error("winBDT Process Error: ", err);
-        console.log("winBDT Process Failed,");
-        localStorage.removeItem("winBdtProcessRunning")
-
-    }
-};
 
 // On page load
 window.addEventListener("DOMContentLoaded", () => {
@@ -351,7 +297,6 @@ window.addEventListener("DOMContentLoaded", () => {
     const businessProcessRunning = localStorage.getItem("businessProcessRunning") === "true";
     const nsuFtdTrackerRunning = localStorage.getItem("nsuFtdTrackerRunning") === "true";
     const badshaReportRunning = localStorage.getItem("badshaReportRunning") === "true";
-    const winBdtProgressRunning = localStorage.getItem("winBdtProcessRunning") === "true";
 
     if (conversionRunning) {
         conversionBtn.disabled = true;
@@ -397,15 +342,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
         const jobId = localStorage.getItem("badshaReportJobId");
         if (jobId) pollLogs(jobId, "badsha")
-    }
-
-    if (winBdtProgressRunning) {
-        windbdtBtn.disabled = true;
-        windbdtBtn.textContent = "Processing...";
-        isWinBdtProcessRunning = true;
-
-        const jobId = localStorage.getItem("winBdtProcessJobId");
-        if (jobId) pollLogs(jobId, "winbdt")
     }
 
 });

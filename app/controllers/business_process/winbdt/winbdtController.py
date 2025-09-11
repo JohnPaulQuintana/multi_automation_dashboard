@@ -10,13 +10,14 @@ import re
 import time
 
 class winbdtController:
-    def __init__(self, username, password, url, startDate, endDate):
+    def __init__(self, username, password, url, startDate, endDate, timeGrain):
         self.username = username
         self.password = password
         self.url = url
         self.startDate = startDate
         self.endDate = endDate
         self.timeRange = "12:00:00"
+        self.timeGrain = timeGrain
         self.max_retries = 3
         parsed_url = urlparse(self.url)
         self.domain = f"{parsed_url.scheme}://{parsed_url.netloc}"
@@ -55,15 +56,111 @@ class winbdtController:
     def account_creation_data(self, data, index):
         return {
             "#": index + 1,
-            "User ID": data.get("userId"),
+            "User ID": data.get("userId").strip(),
             "Login Name": data.get("loginName"),
             "Updated By": f"{data.get('updatorUserId', '')} {data.get('updatorIp', '')}".strip(),
-            "User Action Type": data.get("userActionType"),
-            "Description": data.get("actionDesc"),
+            "User Action Type": data.get("userActionType").strip(),
+            "Description": data.get("actionDesc").strip(),
             "New/Old Value": f"New: {data.get('newValue', '')} Old: {data.get('oldValue', '')}".strip(),
-            "Updated Time": data.get("createTime")
+            "Updated Time": data.get("createTime").strip()
         }
+    # --- Helper function to run scraping with given date range ---
+    def run_scrape_range(self, page, job_id, start_date, end_date, index):
+        results = []
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                log(job_id, f"IFrame Showed | Range: {start_date} → {end_date}")
+                iframe_element = page.wait_for_selector(
+                    "iframe[src*='userActionLog.jsp']", timeout=10000
+                )
+                frame = iframe_element.content_frame()
 
+                frame.wait_for_selector("#userActionType", timeout=5000)
+                self.wait_for_navigation(page, job_id)
+
+                log(job_id, "Changing The Selection to Create Account")
+                time.sleep(1.5)
+                frame.select_option("#userActionType", "CREATE_ACCOUNT")
+
+                # Set start date
+                frame.evaluate(
+                    """(date) => {
+                        let el = document.querySelector('#startDate');
+                        el.value = date;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }""",
+                    start_date
+                )
+                frame.fill('#startTime', self.timeRange)
+
+                # Set end date
+                frame.evaluate(
+                    """(date) => {
+                        let el = document.querySelector('#endDate');
+                        el.value = date;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }""",
+                    end_date
+                )
+                frame.fill('#endTime', self.timeRange)
+
+                log(job_id, "Inserted Filter")
+                frame.select_option("#pageSize", "1000")
+                log(job_id, "Set results per page to 1000")
+                self.wait_for_navigation(page, job_id)
+                time.sleep(1.5)
+                first_page = True
+                while True:
+                    # --- Click and wait for response ---
+                    if first_page:
+                        with page.expect_response(lambda r: "userActionLog" in r.url, timeout=30000) as resp_info:
+                            frame.click('a.btnAMain')
+                        first_page = False
+                    else:
+                        # check pagination first
+                        next_li = frame.locator("li:has(a.next)")
+                        next_a = next_li.locator("a.next")
+                        href = next_a.get_attribute("href")
+                        li_class = next_li.get_attribute("class") or ""
+
+                        if not (href and "page-" in href and "disabled" not in li_class):
+                            log(job_id, "No more pages to scrape")
+                            break
+
+                        log(job_id, f"Moving to next page: {href}")
+                        with page.expect_response(lambda r: "userActionLog" in r.url, timeout=30000) as resp_info:
+                            next_a.click()
+                        self.wait_for_navigation(page, job_id)
+                        time.sleep(1.5)
+
+                    # --- Handle response ---
+                    response = resp_info.value
+                    log(job_id, "Data Result Display")
+
+                    if "application/json" in response.headers.get("content-type", ""):
+                        data = response.json()
+                        data_list = data.get("data", [])
+                        log(job_id, f"Getting the data ({len(data_list)}) through Network Response")
+
+                        for entry in data_list:
+                            parsed = self.account_creation_data(entry, index)
+                            results.append(parsed)
+                            index += 1
+                    else:
+                        html_text = response.text()
+                        log(job_id, "📄 HTML Data:", html_text)
+
+                log(job_id, f"📌 Finished Range {start_date} → {end_date}, Count: {len(results)}")
+                return results, index
+
+            except Exception as e:
+                retries += 1
+                log(job_id, f"⚠️ Error during scraping attempt {retries}: {e}")
+                log(job_id, "Retrying...")
+
+        return [], index
+    
     def account_creation(self, page, job_id):
         log(job_id, "Navigating on Account Creation")
         self.wait_for_navigation(page, job_id)
@@ -72,96 +169,34 @@ class winbdtController:
         all_results = []
         index = 0
         retries = 0
-        while retries < self.max_retries:
-            try: 
-                log(job_id, "IFrame Showed")
-                iframe_element = page.wait_for_selector("iframe[src*='userActionLog.jsp']", timeout=10000)
-
-                # 3. Get the frame object from iframe element
-                frame = iframe_element.content_frame()
-                
-                # 4. Interact inside the iframe
-                frame.wait_for_selector("#userActionType", timeout=5000)
-                self.wait_for_navigation(page, job_id)
-
-                log(job_id, "Changing The Selection to Create Account")
-                time.sleep(1.5)
-                frame.select_option("#userActionType", "CREATE_ACCOUNT")
-                
-            
-                
-                frame.evaluate(
-                    """(date) => {
-                        let el = document.querySelector('#startDate');
-                        el.value = date;
-                        el.dispatchEvent(new Event('change', { bubbles: true }));
-                    }""",
-                    self.startDate
-                )
-                frame.fill('#startTime', self.timeRange)
-
-                frame.evaluate(
-                    """(date) => {
-                        let el = document.querySelector('#endDate');
-                        el.value = date;
-                        el.dispatchEvent(new Event('change', { bubbles: true }));
-                    }""",
-                    self.endDate
-                )
-                frame.fill('#endTime', self.timeRange)
-                
-                log(job_id, "Inserted Filter")
-                frame.select_option("#pageSize", "1000")
-                log(job_id, "Set results per page to 1000")
-                self.wait_for_navigation(page, job_id)
-                time.sleep(1.5)
-
-                while True:
-                    with page.expect_response(lambda r: "userActionLog" in r.url) as resp_info:
-                        frame.click('a.btnAMain')
-
-                    response = resp_info.value
-                    log(job_id, "Data Result Display")
-                    if "application/json" in response.headers.get("content-type", ""):
-                        data = response.json()
-                        
-                        data_list = data.get("data", [])
-                        log(job_id, "Getting the data through Network Response")
-
-
-                        for entry in data_list:
-
-                            data = self.account_creation_data(entry, index)
-                            all_results.append(data)
-                            index += 1
-                    # return filtered_results
-                        
-                    else:
-                        html_text = response.text()
-                        log(job_id, "📄 HTML Data:", html_text)
-                    
-                    next_link = frame.locator('a.now.next')
-                    href = next_link.get_attribute("href")
-
-                    if href and "page-" in href:  # Means there's a next page
-                        log(job_id, f"Moving to next page: {href}")
-                        next_link.click()
-                        self.wait_for_navigation(page, job_id)
-                    else:
-                        log(job_id, "No more pages to scrape")
-                        break
-                log(job_id, f"📌 Final Global Index Count: {index}")
-                log(job_id, "Closing the IFrame")
-                page.click("div.popup-XL a.close")
-
-                return all_results            
         
-            except Exception as e:
-                retries += 1
-                log(job_id, f"⚠️ Error during scraping attempt {retries}: {e}")
+        if self.timeGrain.lower() in ["month", "monthly"]:
+            start_dt = datetime.strptime(self.startDate, "%d-%m-%Y")
+            # end_dt = datetime.strptime(self.endDate, "%d-%m-%Y")
+
+            # First half (15 days max)
+            mid_dt = start_dt + timedelta(days=14)
+            mid_str = mid_dt.strftime("%d-%m-%Y")
+
+            log(job_id, f"Monthly Mode: Splitting into two parts")
+            part1, index = self.run_scrape_range(page, job_id, self.startDate, mid_str, index)
+            all_results.extend(part1)
+            page.click("div.popup-XL a.close")
+
+            # Second half (rest)
+            self.wait_for_navigation(page, job_id)
+            page.click("a[data-btn='modal-userActionLog']")
+            next_start = mid_dt.strftime("%d-%m-%Y")
+            part2, index = self.run_scrape_range(page, job_id, next_start, self.endDate, index)
+            all_results.extend(part2)
+
+        else:
+            # Normal (no split needed)
+            all_results, index = self.run_scrape_range(page, job_id, self.startDate, self.endDate, index)
+
+        page.click("div.popup-XL a.close")
+        return all_results if all_results else False      
         
-        log(job_id, "Failed to trigger sidebar after several attempts.")
-        return False
 
     def deposit_withdrawal_Data(self, data, index):
         return {
@@ -500,9 +535,9 @@ class winbdtController:
                 page.click('#queryReport')
                 time.sleep(5)
 
-                page.wait_for_selector("#tbodyAgent tr#tempTitle")
+                page.wait_for_selector("#tbodyAgent .trTitle")
 
-                rows = page.query_selector_all("#tbodyAgent tr#tempTitle")
+                rows = page.query_selector_all("#tbodyAgent .trTitle")
                 data = []
 
                 for row in rows:

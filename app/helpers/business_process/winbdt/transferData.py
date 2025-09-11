@@ -142,10 +142,32 @@ class transferData:
 
         elif timegrain == "Weekly":
             format_startDate = date.strftime("%Y%m%d")
-            format_endDate = end.strftime("%Y%m%d")
+            format_endDate = (end - timedelta(days=1)).strftime("%Y%m%d")  # subtract 1 day
             header_value = {
                 "userEnteredValue": {
                     "formulaValue": f'=HYPERLINK("{full_url}","{format_startDate}-{format_endDate}")'
+                }
+            }
+
+            # Set header value in row 1, column E
+            requests.append({
+                "updateCells": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": 0,
+                        "endRowIndex": 1,
+                        "startColumnIndex": 4,
+                        "endColumnIndex": 5
+                    },
+                    "rows": [{"values": [header_value]}],
+                    "fields": "userEnteredValue"
+                }
+            })
+        elif timegrain == "Monthly":
+            format_startDate = date.strftime("%m/%y")
+            header_value = {
+                "userEnteredValue": {
+                    "formulaValue": f'=HYPERLINK("{full_url}","{format_startDate}")'
                 }
             }
 

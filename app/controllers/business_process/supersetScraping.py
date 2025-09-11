@@ -204,7 +204,7 @@ class supersetScraping:
         try:
             start_time = time.time()
             async with async_playwright() as p:
-                browser = await p.chromium.launch(headless=True)
+                browser = await p.chromium.launch(headless=False)
                 page = await browser.new_page()
                 await page.goto('https://ar0ytyts.superdv.com/superset/sqllab/')
                 await self.authenticate(page, job_id)

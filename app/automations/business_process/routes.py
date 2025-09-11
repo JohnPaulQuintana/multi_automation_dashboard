@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from app.helpers.template import templates
-from .logic import run  # make sure run(job_id) is updated to call `log(job_id, ...)`
+from .logic import run, winbdt  # make sure run(job_id) is updated to call `log(job_id, ...)`
 from .schema import BusinessAutomationInput  
 from pydantic import BaseModel
 from ..log.state import job_logs
@@ -19,7 +19,11 @@ router = APIRouter()
 def start_automation(data: BusinessAutomationInput, background_tasks: BackgroundTasks):
     job_id = str(uuid.uuid4())
     job_logs[job_id] = ["🟡 Job accepted. Waiting to start..."]  # init
-    background_tasks.add_task(run, job_id, data)
+
+    if data.brand in ["BAJI", "S6", "JB", "CTN"]:
+        background_tasks.add_task(run, job_id, data)
+    if data.brand in ["WINBDT"]:
+        background_tasks.add_task(winbdt, job_id, data)
     return JSONResponse({"message": "Automation started", "job_id": job_id})
 
 @router.get("/logs/{job_id}")

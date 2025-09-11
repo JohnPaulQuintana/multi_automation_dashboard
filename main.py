@@ -7,7 +7,6 @@ from app.automations.media import routes as media_routes
 from app.automations.business_process import routes as business_routes
 from app.automations.tracker import routes as nsuftd_tracker
 from app.automations.badsha import routes as badsha_report
-from app.automations.winbdt_process import routes as winbdt_process
 
 origins = [
     "http://localhost:8000",
@@ -30,6 +29,5 @@ app.include_router(media_routes.router, prefix="/api/v1/media")
 app.include_router(business_routes.router, prefix="/api/v1/business")
 app.include_router(nsuftd_tracker.router, prefix="/api/v1/tracker")
 app.include_router(badsha_report.router, prefix="/api/v1/badsha")
-app.include_router(winbdt_process.router, prefix="/api/v1/winbdt")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
