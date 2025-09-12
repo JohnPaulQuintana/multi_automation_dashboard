@@ -14,7 +14,8 @@ document.addEventListener("alpine:init", () => {
                 CTN: ["AUD", "CNY", "HKD", "MYR ", "SGD"],
                 JB: ["BDT", "INR", "PKR"],
                 S6: ["BDT", "INR", "PKR"],
-                WINBDT: ["BDT"]
+                WINBDT: ["BDT"],
+                BADSHA: ["BDT"]
             },
         
             get currencyOptions() {

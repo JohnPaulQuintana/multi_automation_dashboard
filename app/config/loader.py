@@ -48,6 +48,17 @@ WB_MONTHLY = os.getenv("WB_MONTHLY", "")
 
 #===========================================================================
 
+# Badsha Process Automation
+BP_USERNAME = os.getenv("BP_USERNAME", "")
+BP_PASSWORD = os.getenv("BP_PASSWORD", "")
+BP_DRIVE = os.getenv("BP_DRIVE", "")
+BP_WINBDT_SHEET = os.getenv("BP_WINBDT_SHEET", "")
+BP_DAILY = os.getenv("BP_DAILY", "")
+BP_WEEKLY = os.getenv("BP_WEEKLY", "")
+BP_MONTHLY = os.getenv("BP_MONTHLY", "")
+
+#===========================================================================
+
 # Social Media Automation
 # Variables for the Social Media
 ACCOUNT_SHEET_ID = os.getenv("ACCOUNT_SHEET_ID", "")
