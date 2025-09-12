@@ -625,7 +625,7 @@ class winbdtController:
                     time.sleep(1)
 
                     withdrawal_total = self.deposit_withdrawal_total(page, job_id, "WITHDRAW")
-                    log(job_id, f"Total: {deposit_total}")
+                    log(job_id, f"Total: {withdrawal_total}")
                     time.sleep(1)
 
                     overall_performance= self.overall_performance(page, job_id)

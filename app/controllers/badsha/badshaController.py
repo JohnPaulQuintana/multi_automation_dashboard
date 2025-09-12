@@ -99,12 +99,33 @@ class BadshaController:
             # page.click('a.btn.btn-primary >> text=Search')
             self.wait_for_navigation(page, job_id)
             
-            
+            first_page = True
             while True:
-                with page.expect_response(lambda r: "queryIdentityVerificationForm" in r.url) as resp_info:
-                    page.click('a.btn.btn-primary >> text=Search')
+                if first_page:    
+                    with page.expect_response(lambda r: "queryIdentityVerificationForm" in r.url) as resp_info:
+                        page.click('a.btn.btn-primary >> text=Search')
+                    response = resp_info.value
+                    time.sleep(1.5)
+                    page.click("#time-control")
+                    first_page = False
+                else:
+                    next_link = page.locator('a.next')
+                    href = next_link.get_attribute("href")
 
-                response = resp_info.value
+                    if href and "page-" in href:  # Means there's a next page
+                        log(job_id, f"Moving to next page: {href}")
+                        with page.expect_response(lambda r: "queryIdentityVerificationForm" in r.url) as resp_info:
+                            next_link.click()
+                        response = resp_info.value
+                        time.sleep(1.5)
+                        page.click("#time-control")
+                        self.wait_for_navigation(page, job_id)
+                    else:
+                        log(job_id, "No more pages to scrape")
+                        break
+                            
+                
+                
                 log(job_id, "Data Result Display")
                 if "application/json" in response.headers.get("content-type", ""):
                     data = response.json()
@@ -130,16 +151,7 @@ class BadshaController:
                     html_text = response.text()
                     log(job_id, "📄 HTML Data:", html_text)
                 
-                next_link = page.locator('a.next')
-                href = next_link.get_attribute("href")
-
-                if href and "page-" in href:  # Means there's a next page
-                    log(job_id, f"Moving to next page: {href}")
-                    next_link.click()
-                    self.wait_for_navigation(page, job_id)
-                else:
-                    log(job_id, "No more pages to scrape")
-                    break
+                
             log(job_id, f"✅ Total filtered KYC=True: {filtered_count}")
             log(job_id, f"📌 Final Global Index Count: {global_index}")
 
@@ -222,12 +234,29 @@ class BadshaController:
             # page.click('a.btn.btn-primary >> text=Search')
             self.wait_for_navigation(page, job_id)
             
-            
+            first_page = True
             while True:
-                with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
-                    page.click('#searchBtn')
+                
+                if first_page:
+                    with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
+                        page.click('#searchBtn')
+                    response = resp_info.value
+                    first_page = False
+                else: 
+                    next_link = page.locator('a.next')
+                    href = next_link.get_attribute("href")
 
-                response = resp_info.value
+                    if href and "page-" in href:  # Means there's a next page
+                        log(job_id, f"Moving to next page: {href}")
+                        with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
+                            next_link.click()
+                        response = resp_info.value
+                        self.wait_for_navigation(page, job_id)
+                    else:
+                        log(job_id, "No more pages to scrape")
+                        break
+
+                
                 log(job_id, "Data Result Display")
                 if "application/json" in response.headers.get("content-type", ""):
                     data = response.json()
@@ -247,16 +276,7 @@ class BadshaController:
                     html_text = response.text()
                     log(job_id, "📄 HTML Data:", html_text)
                 
-                next_link = page.locator('a.next')
-                href = next_link.get_attribute("href")
-
-                if href and "page-" in href:  # Means there's a next page
-                    log(job_id, f"Moving to next page: {href}")
-                    next_link.click()
-                    self.wait_for_navigation(page, job_id)
-                else:
-                    log(job_id, "No more pages to scrape")
-                    break
+                
                     
             log(job_id, f"📌 Final Global Index Count: {global_index}")
             return all_results   
@@ -299,12 +319,27 @@ class BadshaController:
             # page.click('a.btn.btn-primary >> text=Search')
             self.wait_for_navigation(page, job_id)
             
-            
+            first_page = True
             while True:
-                with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
-                    page.click('#searchBtn')
+                if first_page:
+                    with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
+                        page.click('#searchBtn')
+                    first_page = False
+                    response = resp_info.value
+                else:
+                    next_link = page.locator('a.next')
+                    href = next_link.get_attribute("href")
 
-                response = resp_info.value
+                    if href and "page-" in href:  # Means there's a next page
+                        log(job_id, f"Moving to next page: {href}")
+                        with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
+                            next_link.click()
+                        response = resp_info.value
+                        self.wait_for_navigation(page, job_id)
+                    else:
+                        log(job_id, "No more pages to scrape")
+                        break
+                
                 log(job_id, "Data Result Display")
                 if "application/json" in response.headers.get("content-type", ""):
                     data = response.json()
@@ -324,16 +359,7 @@ class BadshaController:
                     html_text = response.text()
                     log(job_id, "📄 HTML Data:", html_text)
                 
-                next_link = page.locator('a.next')
-                href = next_link.get_attribute("href")
-
-                if href and "page-" in href:  # Means there's a next page
-                    log(job_id, f"Moving to next page: {href}")
-                    next_link.click()
-                    self.wait_for_navigation(page, job_id)
-                else:
-                    log(job_id, "No more pages to scrape")
-                    break
+                
                     
             log(job_id, f"📌 Final Global Index Count: {global_index}")
             return all_results   
@@ -376,12 +402,28 @@ class BadshaController:
             # page.click('a.btn.btn-primary >> text=Search')
             self.wait_for_navigation(page, job_id)
             
-            
+            first_page = True
             while True:
-                with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
-                    page.click('#searchBtn')
+                if first_page:
+                    with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
+                        page.click('#searchBtn')
+                    first_page = False
+                    response = resp_info.value
+                else: 
+                    next_link = page.locator('a.next')
+                    href = next_link.get_attribute("href")
 
-                response = resp_info.value
+                    if href and "page-" in href:  # Means there's a next page
+                        log(job_id, f"Moving to next page: {href}")
+                        with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
+                            next_link.click()
+                        response = resp_info.value
+                        self.wait_for_navigation(page, job_id)
+                    else:
+                        log(job_id, "No more pages to scrape")
+                        break
+
+                
                 log(job_id, "Data Result Display")
                 if "application/json" in response.headers.get("content-type", ""):
                     data = response.json()
@@ -400,17 +442,6 @@ class BadshaController:
                 else:
                     html_text = response.text()
                     log(job_id, "📄 HTML Data:", html_text)
-                
-                next_link = page.locator('a.next')
-                href = next_link.get_attribute("href")
-
-                if href and "page-" in href:  # Means there's a next page
-                    log(job_id, f"Moving to next page: {href}")
-                    next_link.click()
-                    self.wait_for_navigation(page, job_id)
-                else:
-                    log(job_id, "No more pages to scrape")
-                    break
                     
             log(job_id, f"📌 Final Global Index Count: {global_index}")
             return all_results   

@@ -195,16 +195,38 @@ class spreadsheet():
 
 
     def normalize_date(self, date_str: str):
-        """
-        Try multiple formats for parsing sheet dates.
-        Returns a normalized YYYY-MM-DD string for comparison.
-        """
-        for fmt in ["%b %d %Y", "%B %d %Y", "%d/%m/%Y"]:
+        if not date_str:
+            return None
+
+        # Already a datetime
+        if isinstance(date_str, datetime):
+            return date_str.strftime("%Y-%m-%d")
+
+        # Google Sheets serial numbers
+        try:
+            if isinstance(date_str, int) or (isinstance(date_str, str) and date_str.isdigit()):
+                base = datetime(1899, 12, 30)
+                return (base + timedelta(days=int(date_str))).strftime("%Y-%m-%d")
+        except Exception:
+            pass
+
+        # Try known formats
+        for fmt in ["%Y-%m-%d", "%b %d %Y", "%B %d %Y", "%d/%m/%Y", "%m/%d/%Y"]:
             try:
-                return datetime.strptime(date_str, fmt).date()
+                return datetime.strptime(date_str.strip(), fmt).strftime("%Y-%m-%d")
             except ValueError:
                 continue
+
+        # Handle month/day without year → assume current year
+        for fmt in ["%b %d", "%B %d"]:
+            try:
+                dt = datetime.strptime(date_str.strip(), fmt)
+                return dt.replace(year=datetime.today().year).strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+
         return None
+
 
     def ensure_rows(self, sheet_id, sheet_name, needed_rows):
         """
@@ -455,7 +477,7 @@ class spreadsheet():
                     time.sleep(1.5)
                     AFFIBO = self.affibo(self.url, DAILY_BO_BADSHA_RANGE["AFFILIATE"])
                     time.sleep(1.5)
-                    log(job_id, f"Successfuly Copied The Data for {formatted_date}")
+                    log(job_id, f"Successfuly Copied The Data for {codeDate}")
 
                     if BOBADSHA:
                         self.write_values(job_id, self.url, DAILY_BO_BADSHA_RANGE["BOBADSHA"], BOBADSHA, codeDate, add_blank=True)
