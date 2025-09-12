@@ -12,9 +12,11 @@ multi_automation_dashboard/
 │       └── automation.js
 ├── app/
 │   ├── api/
-│   │   └── v1/
-│   │       └── conversion/
-│   │           └── get_request.py
+│   │   ├── v1/
+│   │   │   └── conversion/
+│   │   │       └── get_request.py
+│   │   └── winbdt_process/
+│   │       └── googledrive.py
 │   ├── controllers/
 │   │   ├── badsha/
 │   │   │   ├── BadshaController.py
@@ -24,9 +26,26 @@ multi_automation_dashboard/
 │   │   │   ├── key_mapping.py
 │   │   │   ├── spreadsheet_extractor.py
 │   │   │   └── superset_scraping.py
+│   │   │       └── winbdt/
+│   │   │           └── winbdtController.py
 │   │   ├── conversion/
 │   │   │   ├── Acquisition_Controller
 │   │   │   └── SpreadSheetController.py
+│   │   ├── media/
+│   │   │   ├── client/
+│   │   │   │   └── ClientSheetController.py
+│   │   │   ├── facebook/
+│   │   │   │   ├── SpreadSheetController.py
+│   │   │   │   └── facebookController.py
+│   │   │   ├── instagram/
+│   │   │   │   ├── IGController.py
+│   │   │   │   └── IGSpreadsheetController.py/
+│   │   │   ├── twitter/
+│   │   │   │   ├── TwtitterController.py
+│   │   │   │   └── TwitterSpreadsheetController.py
+│   │   │   └── youtube/
+│   │   │       ├── YoutubeController.py
+│   │   │       └── YoutubeSpreadsheetController.py
 │   │   └── tracker/ # NSU/FTD Tracker
 │   │       ├── AffiliateController.py
 │   │       └── SpreadSheetController.py
@@ -42,10 +61,19 @@ multi_automation_dashboard/
 │   │   ├── badsha/
 │   │   │   └── BadshaSpreadsheet.py # conversion helpers
 │   │   ├── business_process/
-│   │   │   └── businessSpreadsheet.py # business_process helpers
+│   │   │   ├── businessSpreadsheet.py # business_process helpers
+│   │   │   └── winbdt/
+│   │   │       ├── transferData.py
+│   │   │       └── winBdtSpreadsheet.py
 │   │   ├── conversion/
 │   │   │   ├── conversion.py # conversion helpers
 │   │   │   └── spreadsheet.py # conversion helpers
+│   │   ├── media/
+│   │   │   ├── Client_Helper.py # conversion helpers
+│   │   │   ├── Facebook_Helper.py # conversion helpers
+│   │   │   ├── IG_Helper.py # conversion helpers
+│   │   │   ├── Twitter_Helper.py # conversion helpers
+│   │   │   └── Youtube_Helper.py # conversion helpers
 │   │   ├── tracker/
 │   │   │   └── trackerSpreadsheet.py # NSU/FTD Tracker helpers
 │   │   └── template.py # initialize templates
