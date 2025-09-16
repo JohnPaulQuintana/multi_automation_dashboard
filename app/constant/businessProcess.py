@@ -14,10 +14,16 @@ WINBDT_RANGE = {
     "AccountCreation": "Account Creation",
     "DepositWithdrawal": "Deposit and Withdrawal (Data)",
     "OverallPerformance": "Overall Performance (Data)",
-    "ProviderPerformance": "Provider Performance (Data)",
+    "ProviderPerformance": "Provider Performance (Data)"
     
-    "CODE": "CODE",
-    "AFFILIATE": "AFFILIATE",
-    "BOBADSHA": "BOBADSHA",
-    "AFFIBO": "AFFIBO"
+
+}
+
+BADSHA_RANGE = {
+    "SUMMARY": "SUMMARY",
+    "AccountCreation": "Account Creation",
+    "DepositWithdrawal": "Deposit and Withdrawal (Data)",
+    "OverallPerformance": "Overall Performance (Data)",
+    "ProviderPerformance": "Provider Performance (Data)"
+    
 }
