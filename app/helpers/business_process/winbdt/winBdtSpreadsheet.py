@@ -2,7 +2,7 @@ from app.config.loader import (
     TYPE, PROJECT_ID, PRIVATE_KEY_ID, PRIVATE_KEY, CLIENT_EMAIL, CLIENT_ID,
     AUTH_URI, TOKEN_URI, AUTH_PROVIDER_X509_CERT_URL, CLIENT_X509_CERT_URL, UNIVERSE_DOMAIN
 )
-from app.constant.winbdt import WINBDT_RANGE 
+from app.constant.businessProcess import WINBDT_RANGE 
 from app.config.loader import NSU_FTD_TRACKER_SHEET
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
