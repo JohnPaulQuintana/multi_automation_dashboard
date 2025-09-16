@@ -11,11 +11,15 @@ from app.automations.log.state import log  # ✅ import from new file
 
 
 class googledrive:
-    def __init__(self, drive_url, startDate, endDate, time_grain):
+    def __init__(self, drive_url, daily, weekly, monthly, startDate, endDate, time_grain, brand):
         self.drive_url = drive_url
+        self.daily = daily
+        self.weekly = weekly
+        self.monthly = monthly
         self.startDate = startDate
         self.endDate = endDate
         self.time_grain = time_grain
+        self.brand = brand
         self.SCOPES = ["https://www.googleapis.com/auth/drive"]
 
         self.client_config = {
@@ -31,7 +35,7 @@ class googledrive:
         }
 
         # ✅ Fixed folder path for credentials & token
-        self.cred_dir = os.path.join("app", "api", "winbdt_process")
+        self.cred_dir = os.path.join("app", "api", "business_process")
         self.token_path = os.path.join(self.cred_dir, "token.pickle")
 
         # ✅ Ensure folder exists
@@ -116,24 +120,24 @@ class googledrive:
         # ✅ Map self.time_grain → folder name
         if self.time_grain.lower() in ["day", "daily"]:
             folder_name = "Daily"
-            SOURCE_FILE_ID = WB_DAILY
-            file_name = f"WinBDT - {startDate} {folder_name} Business Performance Template"
+            SOURCE_FILE_ID = self.daily
+            file_name = f"{self.brand} - {startDate} {folder_name} Business Performance Template"
 
         elif self.time_grain.lower() in ["week", "weekly"]:
             folder_name = "Weekly"
-            SOURCE_FILE_ID = WB_WEEKLY
-            file_name = f"WinBDT - {startDate} {folder_name} Business Performance Template"
+            SOURCE_FILE_ID = self.weekly
+            file_name = f"{self.brand} - {startDate} {folder_name} Business Performance Template"
 
         elif self.time_grain.lower() in ["month", "monthly"]:
             folder_name = "Monthly"
-            SOURCE_FILE_ID = WB_MONTHLY
-            file_name = f"WinBDT - {monthDate} {folder_name} Business Performance Template"
+            SOURCE_FILE_ID = self.monthly
+            file_name = f"{self.brand} - {monthDate} {folder_name} Business Performance Template"
 
         else:
             folder_name = "Misc"
 
         log(job_id, "Getting the Destination Folder")
-        DEST_FOLDER_ID = self.get_destination_folder(job_id, WB_DRIVE, folder_name, date_start)
+        DEST_FOLDER_ID = self.get_destination_folder(job_id, self.drive_url, folder_name, date_start)
 
         
         # DEST_FOLDER_ID = "1o0KajmupdO_BpKexgXoibn3OBXnRVT-V"
