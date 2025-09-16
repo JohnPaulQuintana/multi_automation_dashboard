@@ -270,6 +270,7 @@ class SpreadSheetController:
             today = datetime.now(timezone.utc).date()
             yesterday = today - timedelta(days=1)
             today_str = yesterday.strftime('%d/%m/%Y') #Yesterday date
+            # today_str = today.strftime('%d/%m/%Y') #Yesterday date
 
             # Check or create date column
             date_col_index = self._handle_date_column(
