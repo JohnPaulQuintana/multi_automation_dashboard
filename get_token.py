@@ -24,4 +24,7 @@ def save_token_for_account(client_secret_path: str, token_output_path: str):
 
 # Example: Run for all YouTube account
 # client is baji npr email:
-save_token_for_account("app/config/shared_secret.json", "app/controllers/media/tokens/token_badsha_bdt.pkl")
+save_token_for_account(
+    "app/config/shared_secret.json", 
+   "app/controllers/media/youtube/tokens/token_six6s_bdt.pkl"
+)
