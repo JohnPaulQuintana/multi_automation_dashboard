@@ -15,7 +15,7 @@ multi_automation_dashboard/
 │   │   ├── v1/
 │   │   │   └── conversion/
 │   │   │       └── get_request.py
-│   │   └── winbdt_process/
+│   │   └── business_process/
 │   │       └── googledrive.py
 │   ├── controllers/
 │   │   ├── badsha/
@@ -26,8 +26,10 @@ multi_automation_dashboard/
 │   │   │   ├── key_mapping.py
 │   │   │   ├── spreadsheet_extractor.py
 │   │   │   └── superset_scraping.py
-│   │   │       └── winbdt/
-│   │   │           └── winbdtController.py
+│   │   │       ├── winbdt/
+│   │   │       │  └── winbdtController.py
+│   │   │       └── badsha/
+│   │   │           └── badshaProcessController.py
 │   │   ├── conversion/
 │   │   │   ├── Acquisition_Controller
 │   │   │   └── SpreadSheetController.py
@@ -62,6 +64,9 @@ multi_automation_dashboard/
 │   │   │   └── BadshaSpreadsheet.py # conversion helpers
 │   │   ├── business_process/
 │   │   │   ├── businessSpreadsheet.py # business_process helpers
+│   │   │   ├── badsha/
+│   │   │   │   ├── badshatransferData.py
+│   │   │   │   └── badshaSpreadsheet.py
 │   │   │   └── winbdt/
 │   │   │       ├── transferData.py
 │   │   │       └── winBdtSpreadsheet.py
