@@ -174,14 +174,15 @@ class badshaProcessController():
                 "BONUS": "Promotion Bonus",
                 "RESCUE_BONUS": "Rescue Bonus",
                 "COMM_BONUS": "Commission Bonus",
-                "PROMOTION_MAX_WIN": "Max Win",
+                "PROMOTION_MAX_WIN": "Max win",
                 "SIGNUP_REBATE": "Signup Rebate",
                 "SHARE_PROFIT": "Earned profit",
+                "SIGNUP_REBATE": "Signup Rebate",
             }
             credit_type = mapping.get(credit_type, credit_type.capitalize())
 
         # Check if first deposit
-        if data.get("isFirstDeposit", False):
+        if data.get("isFirstDeposit", False) and data.get("creditAllocatedType") == "DEPOSIT":
             plus_minus = f"First Deposit{data.get('diff')}"
         else:
             plus_minus = f"{credit_type}{data.get('diff')}"
@@ -200,97 +201,177 @@ class badshaProcessController():
 
 
 
-    def deposit_withdrawal(self, page, job_id, type):
+    def deposit_withdrawal(self, page, job_id, types=None):
+        """
+        Scrapes deposit & withdrawal data for multiple types.
+        :param types: list of type values (e.g., ["deposit", "withdrawal"])
+                    if None, it will auto-detect from the dropdown.
+        """
         log(job_id, "Scraping For Deposit and Withdrawal Data")
         all_results = []
-        # self.date= "10-08-2025"
-        index = 0  # Track the global index across pages
-        retries = 0
-        while retries < self.max_retries:
-            try: 
-                log(job_id, "Triggering Fund In/Out")
-                page.locator('.navDropdown').nth(2).click()
-                page.locator("#balanceItem").click()
-                log(job_id, f"Changing The Selection to {type}")
-                self.wait_for_navigation(page, job_id)
-                time.sleep(1)
-                page.select_option("#creditAllocatedType", type)
-                page.evaluate(
-                    """(date) => {
-                        let el = document.querySelector('#startDate');
-                        el.value = date;
-                        el.dispatchEvent(new Event('change', { bubbles: true }));
-                    }""",
-                    self.startDate
-                )
-                time.sleep(.5)
-                page.fill('#startTime', self.timeRange)
-                page.evaluate(
-                    """(date) => {
-                        let el = document.querySelector('#endDate');
-                        el.value = date;
-                        el.dispatchEvent(new Event('change', { bubbles: true }));
-                    }""",
-                    self.endDate
-                )
-                page.fill('#endTime', self.timeRange)
-                time.sleep(.5)
-                log(job_id, "Inserted Filter")
-                page.select_option("#pageSize", "1000")
-                log(job_id, "Set results per page to 1000")
-                self.wait_for_navigation(page, job_id)
-                first_page = True
-                while True:
-                    if first_page:
-                        with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
-                            page.click('#searchBtn')
-                        first_page = False
-                    else:
-                        next_link = page.locator('a.next')
-                        href = next_link.get_attribute("href")
+        index = 0  # Track the global index across types and pages
 
-                        if href and "page-" in href:  # Means there's a next page
-                            log(job_id, f"Moving to next page: {href}")
-                            with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
-                                next_link.click()
-                            self.wait_for_navigation(page, job_id)
+        # ✅ Auto-detect available types if not provided
+        if types is None:
+            log(job_id, "Detecting available types from dropdown")
+            types = page.eval_on_selector_all(
+                "#creditAllocatedType option",
+                "els => els.map(el => el.value).filter(v => v.trim() !== '')"
+            )
+            log(job_id, f"Available types detected: {types}")
+
+        log(job_id, "Opening Fund in/out page...")
+        page.locator('.navDropdown').nth(2).click()
+        page.locator("#balanceItem").click()
+        self.wait_for_navigation(page, job_id)
+
+        for type_val in types:
+            retries = 0
+            while retries < self.max_retries:
+                try:
+                    log(job_id, f"Changing The Selection to {type_val}")
+                    self.wait_for_navigation(page, job_id)
+                    time.sleep(1)
+                    page.select_option("#creditAllocatedType", type_val)
+
+                    # Fill start date
+                    page.evaluate(
+                        """(date) => {
+                            let el = document.querySelector('#startDate');
+                            el.value = date;
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        }""",
+                        self.startDate
+                    )
+                    time.sleep(.5)
+                    page.fill('#startTime', self.timeRange)
+
+                    # Fill end date
+                    page.evaluate(
+                        """(date) => {
+                            let el = document.querySelector('#endDate');
+                            el.value = date;
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        }""",
+                        self.endDate
+                    )
+                    page.fill('#endTime', self.timeRange)
+                    time.sleep(.5)
+                    log(job_id, "Inserted Filter")
+
+                    page.select_option("#pageSize", "1000")
+                    log(job_id, "Set results per page to 1000")
+                    self.wait_for_navigation(page, job_id)
+
+                    first_page = True
+                    while True:
+                        if first_page:
+                            with page.expect_response(lambda r: "creditAllocatedLog" in r.url, timeout=10000) as resp_info:
+                                page.click('#searchBtn')
+                            # response = resp_info.value
+
+                            first_page = False
+                    
+                            response = resp_info.value
                         else:
-                            log(job_id, "No more pages to scrape")
-                            break
+                            next_link = page.locator('a.next')
+                            href = next_link.get_attribute("href")
 
-                    response = resp_info.value
-                    log(job_id, "Data Result Display")
-                    if "application/json" in response.headers.get("content-type", ""):
-                        data = response.json()
-                        
-                        data_list = data.get("data", [])
-                        data_total = data.get("pageInfo", {})
-                        log(job_id, "Getting the data through Network Response")
+                            if href and "page-" in href:  # Means there's a next page
+                                log(job_id, f"Moving to next page: {href}")
+                                with page.expect_response(lambda r: "creditAllocatedLog" in r.url) as resp_info:
+                                    next_link.click()
+                       
+                                response = resp_info.value
+                            else:
+                                log(job_id, f"No more pages to scrape for {type_val}")
+                                break
+
+                        log(job_id, "Data Result Display")
+                        if "application/json" in response.headers.get("content-type", ""):
+                            data = response.json()
+                            data_list = data.get("data", [])
+                            log(job_id, f"Getting the data for {type_val} through Network Response")
+
+                            for entry in data_list:
+                                result = self.deposit_withdrawal_Data(entry, index)
+                                # ✅ Add type info for clarity
+                                log(job_id, f"{result}")
+                                all_results.append(result)
+                                index += 1
+
+                        else:
+                            html_text = response.text()
+                            log(job_id, "📄 HTML Data:", html_text)
+
+                    log(job_id, f"📌 Finished scraping for {type_val}, current total count: {index}")
+                    break  # ✅ Exit retry loop for this type
+
+                except Exception as e:
+                    retries += 1
+                    log(job_id, f"⚠️ Error during scraping {type_val}, attempt {retries}: {e}")
+
+        log(job_id, f"✅ Finished all types, Final Global Index Count: {index}")
+        return all_results
 
 
-                        for entry in data_list:
-                            result = self.deposit_withdrawal_Data(entry, index)
-                            all_results.append(result)
-                            index += 1
+    def fund_in_out(self, page, job_id, type):
+        url = "https://ag.badsha.live/service/agent/creditAllocatedLog"
 
-                        # total = data_total.get("deposit", 0)
-                        # return filtered_results
-                        
-                    else:
-                        html_text = response.text()
-                        log(job_id, "📄 HTML Data:", html_text)
-                    
-                    
-                        
-                log(job_id, f"📌 Final Global Index Count: {index}")
-                return all_results
-            
-            except Exception as e:
-                retries += 1
-                log(job_id, f"⚠️ Error during scraping attempt {retries}: {e}")
+        payload = {
+            "timeZone": "GMT+08:00", 
+            "startDate": f"{self.startDate} {self.timeRange}", 
+            "endDate": f"{self.endDate} {self.timeRange}", 
+            "userType": "PLAYER",  
+            "pageNumber": "1", 
+            "pageSize": "1000", 
+            "creditAllocatedType": type, 
+            "isShowSystemLog": "value1", 
+            "tagId": "-1"
+        }  # data to send
 
-        log(job_id, "❌ Max retries reached, returning partial data")
-        return all_results, 0 
+        # Get cookies from Playwright
+        cookies = page.context.cookies()
+        session = requests.Session()
+        for cookie in cookies:
+            session.cookies.set(cookie["name"], cookie["value"])
+        headers = {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",  # example
+            "Origin": "https://ag.badsha.live",
+            "Referer": "https://ag.badsha.live/your/page",
+            "User-Agent": "Mozilla/5.0 ..."  # same as browser
+            # plus any other headers from resp.request.headers
+        }
+
+        try:
+            headers["Content-Type"] = "application/x-www-form-urlencoded"
+            response = session.post(url, data=payload, headers=headers, timeout=30)
+
+            if response.status_code == 200 and "error" in response.text.lower():
+                headers["Content-Type"] = "application/json"
+                response = session.post(url, json=payload, headers=headers, timeout=30)
+
+            response.raise_for_status()
+            # print(f"[ ✅ Status: {response.status_code} ]")
+            # print("🔎 Raw response:", response.text[:500])
+
+            data = response.json()
+            page_info = data.get("pageInfo", {})  # dict
+            # results = page_info.get("deposit", 0)
+
+            if type in ["DEPOSIT"]:
+                result = page_info.get("deposit", 0)
+            else:
+                result = page_info.get("withdraw", 0)
+
+            log(job_id, f"{result}")
+            time.sleep(15)
+            # return result
+
+        except requests.exceptions.RequestException as e:
+            print(f"[{job_id}] ❌ Network error:", e)
+            return 0
 
     def get_jackpot_value(self, row):
         try:
@@ -568,9 +649,61 @@ class badshaProcessController():
                     account_creation = self.account_creation(page, job_id)
                     log(job_id, "✅ Account Creation Done")
                     time.sleep(1)
-                    deposit_withdrawal = self.deposit_withdrawal(page, job_id, "ALL")
-                    log(job_id, "✅ Deposit_Withdrawal")
+                    deposit_withdrawal = self.deposit_withdrawal(
+                        page, 
+                        job_id, 
+                        types=[
+                            "DEPOSIT", "WITHDRAW", "PROMOTION_MAX_WIN", "SHARE_PROFIT", 
+                            "BONUS", "COMM_BONUS", "RESCUE_BONUS", "REWARD_TURNOVER_AMOUNT", "SIGNUP_REBATE"
+                        ]
+                    )
+                    log(job_id, f"✅ Deposit_Withdrawal{len(deposit_withdrawal)}")
                     time.sleep(1)
+
+                    # deposit_withdrawal = self.fund_in_out(page, job_id, "WITHDRAW")
+                    # log(job_id, "✅ Deposit_Withdrawal")
+                    # time.sleep(1)
+
+                    # if self.timeGrain in ["Weekly", "weekly", "Monthly", "monthly"]:
+                    #     ftd = self.deposit_withdrawal(page, job_id, "DEPOSIT")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     ftd = self.deposit_withdrawal(page, job_id, "FIRSTDEPOSIT")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     ftd_amount = self.deposit_withdrawal(page, job_id, "WITHDRAW")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     total_top_ups = self.deposit_withdrawal(page, job_id, "PROMOTION_MAX_WIN")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     total_withdrawal = self.deposit_withdrawal(page, job_id, "SHARE_PROFIT")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     earned_profit = self.deposit_withdrawal(page, job_id, "BONUS")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     promotion_bonus = self.deposit_withdrawal(page, job_id, "COMM_BONUS")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     total_withdrawal = self.deposit_withdrawal(page, job_id, "RESCUE_BONUS")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     total_withdrawal = self.deposit_withdrawal(page, job_id, "REWARD_TURNOVER_AMOUNT")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
+
+                    #     total_withdrawal = self.deposit_withdrawal(page, job_id, "SIGNUP_REBATE")
+                    #     log(job_id, "✅ ftd")
+                    #     time.sleep(.5)
 
                     overall_performance= self.overall_performance(page, job_id)
                     log(job_id, "✅ Overall Performance")
