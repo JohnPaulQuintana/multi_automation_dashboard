@@ -65,40 +65,29 @@ class winBdtSpreadsheet():
                 v = v.replace("\n", " ").strip()
             cleaned.append(v)
         return cleaned
-
     
-    def batch_insert_values(self, copy_url, data_dict):
-        """
-        Insert multiple datasets into different sheets in ONE API call.
-        data_dict: { sheet_name: (values, vt_apl_tpl_flag) }
-        """
+    def insert_data_into_sheet(self, job_id, copy_url, sheet_name, data):
         try:
-            requests = []
-            for sheet_name, values in data_dict.items():
-                if not values:
-                    continue
+            log(job_id, f"Getting First Empty Row for {sheet_name}")
 
-                # Find first empty row for this sheet
-                start_row = self.get_first_empty_row(copy_url, sheet_name, col="A", start_row=1)
+            start_row = self.get_first_empty_row(copy_url, sheet_name, col="A", start_row=1)
 
-
-                requests.append({
-                    "range": f"{sheet_name}!A{start_row}",
-                    "values": values
-                })
-
-            if requests:
-                body = {
-                    "valueInputOption": "USER_ENTERED",
-                    "data": requests
+            body = {
+                    "values": data
                 }
-                self.service.spreadsheets().values().batchUpdate(
-                    spreadsheetId=copy_url,
-                    body=body
-                ).execute()
+
+            self.service.spreadsheets().values().append(
+                spreadsheetId=self.copy_url,
+                range=f"{sheet_name}!A{start_row}",
+                valueInputOption="USER_ENTERED",
+                body=body
+            ).execute()
+
+            log(job_id, f"Successfuly Inserted {sheet_name}")
+            time.sleep(1.5)
 
         except HttpError as err:
-            raise Exception(f"Google Sheets API error (batch_insert_values): {err}")
+            log(job_id, f"❌ Error appending data for {sheet_name}: {err}")
         
     def insert_account_creation(self, copy_url, values):
         """
@@ -140,19 +129,7 @@ class winBdtSpreadsheet():
 
 
     def get_row(self, copy_url, sheet_name, col, start_row, item=None):
-        """
-        Find the row number in a Google Sheet where the given column matches `match`.
 
-        Args:
-            copy_url (str): Spreadsheet ID
-            sheet_name (str): The sheet/tab name
-            col (str): Column letter to search in (default "A")
-            start_row (int): Row number to start searching from (default 1)
-            match (str): The value to search for
-
-        Returns:
-            int: The row number (1-based, as in Sheets), or None if not found
-        """
         try:
             result = self.service.spreadsheets().values().get(
                 spreadsheetId=copy_url,
@@ -169,13 +146,7 @@ class winBdtSpreadsheet():
             raise Exception(f"Google Sheets API error (get_first_empty_row): {err}")
         
     def deposit_withdrawal_batch(self, copy_url, items):
-        """
-        Batch update deposit/withdrawal values into Google Sheet.
 
-        Args:
-            copy_url (str): Spreadsheet ID
-            items (list): List of tuples in format (sheet_name, value, match_string)
-        """
         try:
             requests = []
 
@@ -250,16 +221,25 @@ class winBdtSpreadsheet():
             # --- Convert dicts → lists of values (remove keys) ---
             account_creation_value = [self.clean_entry(entry) for entry in account_creation]
             deposit_withdrawal_value = [self.clean_entry(entry) for entry in deposit_withdrawal_results]
-            # deposit_total_value = [self.clean_entry(entry) for entry in deposit_total]
-            # withdrawal_results_value = [self.clean_entry(entry) for entry in withdrawal_results]
             overall_performance_value = [self.clean_entry(entry) for entry in overall_performance]
             provider_performance_value = [self.clean_entry(entry) for entry in provider_performance]
             log(job_id, "Data is Fetching in Spreadsheet")
-            self.batch_insert_values(self.copy_url, {
-                WINBDT_RANGE["DepositWithdrawal"]: deposit_withdrawal_value,
-                WINBDT_RANGE["OverallPerformance"]: overall_performance_value,
-                WINBDT_RANGE["ProviderPerformance"]: provider_performance_value,
-            })
+
+            data_dict = {
+                "DepositWithdrawal": deposit_withdrawal_value,
+                "OverallPerformance": overall_performance_value,
+                "ProviderPerformance": provider_performance_value,
+            }
+            for key, values in data_dict.items():
+                if not values:  # skip empty datasets
+                    continue
+
+                self.insert_data_into_sheet(
+                    job_id,
+                    self.copy_url,         # spreadsheet ID
+                    WINBDT_RANGE[key],     # sheet name from BADSHA_RANGE
+                    values                 # actual rows of data
+                )
 
             if account_creation_value:
                 self.insert_account_creation(self.copy_url, account_creation_value)
@@ -271,7 +251,6 @@ class winBdtSpreadsheet():
                     (WINBDT_RANGE["SUMMARY"], withdrawal_total, "Total Withdrawals"),
                 ]
             )
-
 
             data = self.copy_summary_data(job_id, self.copy_url, WINBDT_RANGE["SUMMARY"])
 

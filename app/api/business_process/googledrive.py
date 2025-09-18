@@ -142,7 +142,7 @@ class googledrive:
         
         # DEST_FOLDER_ID = "1o0KajmupdO_BpKexgXoibn3OBXnRVT-V"
 
-    
+        log(job_id, "Copying Spreadsheet...")
         copy_metadata = {
             "name": file_name,
             "parents": [DEST_FOLDER_ID],  # folder ID only
