@@ -233,7 +233,6 @@ class badshaTransferData:
 
         sheet_id = self.get_sheet_id(timegrain)
 
-
         self.insert_column_header(sheet_id, date, end, timegrain)
 
         self.insert_data(timegrain, self.fetch_data)
