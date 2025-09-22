@@ -20,3 +20,8 @@ DAILY_BO_BADSHA_RANGE = {
     "BOBADSHA": "BOBADSHA",
     "AFFIBO": "AFFIBO"
 }
+
+url = "https://ag.badsha.live/index.jsp"
+url_login_api_url = "https://ag.badsha.live/auth/agent/login"
+fund_url = "https://ag.badsha.live/service/agent/creditAllocatedLog"
+win_loss_url = "https://ag.badsha.live/page/agent/report/winLossProductSetting.jsp"

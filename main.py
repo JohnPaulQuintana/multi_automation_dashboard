@@ -6,7 +6,11 @@ from app.automations.conversion import routes as coversion_routes
 from app.automations.media import routes as media_routes
 from app.automations.business_process import routes as business_routes
 from app.automations.tracker import routes as nsuftd_tracker
-from app.automations.badsha import routes as badsha_report
+from app.automations.badshaReport import routes as badsha_report
+from app.automations.business_process.winBDT import routes as winbdt
+from app.automations.business_process.sportsradar import routes as sportsradar
+from app.automations.business_process.badshaProcess import routes as badshaProcess
+
 
 origins = [
     "http://localhost:8000",
@@ -29,5 +33,8 @@ app.include_router(media_routes.router, prefix="/api/v1/media")
 app.include_router(business_routes.router, prefix="/api/v1/business")
 app.include_router(nsuftd_tracker.router, prefix="/api/v1/tracker")
 app.include_router(badsha_report.router, prefix="/api/v1/badsha")
+app.include_router(winbdt.router, prefix="/api/v1/winbdt")
+app.include_router(sportsradar.router, prefix="/api/v1/sportsradar")
+app.include_router(badshaProcess.router, prefix="/api/v1/badshaProcess")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

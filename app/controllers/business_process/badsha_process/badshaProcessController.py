@@ -566,7 +566,7 @@ class badshaProcessController():
                 log(job_id, "Inserted Filter")
                 self.wait_for_navigation(page, job_id)
                 page.click('#queryReport')
-                time.sleep(5)
+                time.sleep(.5)
 
                 page.wait_for_selector("#tbodyAgent .trTitle")
 
