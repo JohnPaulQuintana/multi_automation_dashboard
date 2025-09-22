@@ -15,7 +15,7 @@ document.addEventListener("alpine:init", () => {
                     startDate: this.startDate
                 };
                 // Call function defined in automation.js
-                BadshaReportAutomation(payload);
+                startJob('badsha', payload);
             }
         }
     });

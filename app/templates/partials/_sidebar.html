@@ -17,6 +17,11 @@
 
   <!-- Navigation Tabs -->
   <div class="space-y-2">
+
+    <div class="flex items-center gap-2 text-xl md:text-xl font-bold text-black">
+      <i data-lucide="handshake" class="w-4 h-4 md:w-5 md:h-5"></i>
+      <span>Social Media</span>
+    </div>
     <button
       @click="$store.tab = 'conversion_automation'"
       class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
@@ -30,16 +35,13 @@
       class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
       :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'social_media_automation' }"
     >
-      <i data-lucide="send" class="w-4 h-4 inline-block mr-2"></i> Socal Media
+      <i data-lucide="send" class="w-4 h-4 inline-block mr-2"></i> Follower's Gain
     </button>
 
-    <button
-      @click="$store.tab = 'business_process_automation'"
-      class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
-      :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'business_process_automation' }"
-    >
-      <i data-lucide="briefcase-business" class="w-4 h-4 inline-block mr-2"></i> Business Process
-    </button>
+    <div class="flex items-center gap-2 text-xl md:text-xl font-bold text-black">
+      <i data-lucide="trending-up-down" class="w-4 h-4 md:w-5 md:h-5"></i>
+      <span>Data Processor</span>
+    </div>            
 
     <button
       @click="$store.tab = 'nsu_ftd_tracker_automation'"
@@ -55,6 +57,43 @@
       :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'badsha_report_automation' }"
     >
       <i data-lucide="proportions" class="w-4 h-4 inline-block mr-2"></i> Badsha Report
+    </button>
+
+    <div class="flex items-center gap-2 text-xl md:text-xl font-bold text-black">
+      <i data-lucide="chart-no-axes-combined" class="w-4 h-4 md:w-5 md:h-5"></i>
+      <span>Business Process</span>
+    </div>
+
+    <button
+      @click="$store.tab = 'business_process_automation'"
+      class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
+      :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'business_process_automation' }"
+    >
+      <i data-lucide="files" class="w-4 h-4 inline-block mr-2"></i> Superset Process
+    </button>
+
+    <button
+      @click="$store.tab = 'winBDT_automation'"
+      class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
+      :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'winBDT_automation' }"
+    >
+      <i data-lucide="bitcoin" class="w-4 h-4 inline-block mr-2"></i> WinBDT Process
+    </button>
+
+    <button
+      @click="$store.tab = 'badshaProcess_automation'"
+      class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
+      :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'badshaProcess_automation' }"
+    >
+      <i data-lucide="file-chart-column-increasing" class="w-4 h-4 inline-block mr-2"></i> Badsha Process
+    </button>
+
+    <button
+      @click="$store.tab = 'sportsradar_automation'"
+      class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
+      :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'sportsradar_automation' }"
+    >
+      <i data-lucide="volleyball" class="w-4 h-4 inline-block mr-2"></i> Sportradar Process
     </button>
     
   </div>
