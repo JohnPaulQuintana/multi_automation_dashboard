@@ -476,11 +476,12 @@ class badshaProcessController():
                 log(job_id, "Inserted Filter")
                 self.wait_for_navigation(page, job_id)
                 page.click('#queryReport')
-                time.sleep(5)
+                self.wait_for_navigation(page, job_id)
+                time.sleep(.5)
 
-                page.wait_for_selector("#tbodyAgent tr#tempTitle")
+                page.wait_for_selector("#tbodyAgent .trTitle")
 
-                rows = page.query_selector_all("#tbodyAgent tr#tempTitle")
+                rows = page.query_selector_all("#tbodyAgent .trTitle")
                 data = []
 
                 for row in rows:

@@ -2,10 +2,9 @@
 from app.config.loader import (
     WB_USERNAME, WB_PASSWORD, WB_DRIVE, WB_DAILY, WB_WEEKLY, WB_MONTHLY, WB_WINBDT_SHEET
 )
-# from app.constant.badsha import DAILY_BO_BADSHA_RANGE, TODAY, TODAY_DATE, YESTERDAY, TIME
-# from app.api.winbdt_process.googledrive import googledrive
+from app.constant.businessProcess import WINBDT_URL
 from app.debug.line import debug_line, debug_title
-from app.controllers.business_process.winbdt.winbdtController import winbdtController
+from app.controllers.business_process.winbdt.v2winbdtController import winbdtController
 from app.helpers.business_process.winbdt.winBdtSpreadsheet import winBdtSpreadsheet
 from app.helpers.business_process.winbdt.transferData import transferData
 from app.api.business_process.googledrive import googledrive
@@ -27,7 +26,7 @@ def process_data(job_id, username, password, startDate, endDate, brand, time_gra
     result = data.run(job_id)
 
     if not (result and isinstance(result, dict) and "status" in result and result["status"] == 200):
-        raise ValueError(f"Scraping failed: 'No error message provided'")
+        raise ValueError(f"Scraping failed: 'No error message provideds'")
     
     log(job_id, "Scraping Process Successfuly Completed")
 
