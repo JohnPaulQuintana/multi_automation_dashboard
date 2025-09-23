@@ -11,6 +11,12 @@ const jobs = {
         stateKey: "socialMediaRunning",
         jobKey: "socialMediaJobId"
     },
+    mediaBalance: {
+        button: document.getElementById("mediaBalanceBtn"),
+        endpoint: "/api/v1/mediaBalance/start",
+        stateKey: "mediaBalanceRunning",
+        jobKey: "mediaBalanceJobId"
+    },
     business: {
         button: document.getElementById("businessBtn"),
         endpoint: "/api/v1/business/start",
@@ -82,9 +88,17 @@ const pollLogs = (jobId, jobType) => {
                     localStorage.removeItem(job.stateKey);
                     localStorage.removeItem(job.jobKey);
                     job.button.disabled = false;
-                    job.button.textContent = `Start ${capitalize(jobType)}`;
+                    job.button.textContent = `Start`;
                 });
             }
+            else
+                Object.values(jobs).forEach(job => {
+                    localStorage.removeItem(job.stateKey);
+                    localStorage.removeItem(job.jobKey);
+                    job.button.disabled = false;
+                    job.button.textContent = `Start`;
+                });
+
         } catch (err) {
             console.error("Log polling error:", err);
             clearInterval(interval);

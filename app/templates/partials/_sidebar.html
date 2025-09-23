@@ -38,6 +38,14 @@
       <i data-lucide="send" class="w-4 h-4 inline-block mr-2"></i> Follower's Gain
     </button>
 
+    <button
+      @click="$store.tab = 'media_bot_automation'"
+      class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-green-100"
+      :class="{ 'bg-green-100 font-semibold text-green-600': $store.tab === 'media_bot_automation' }"
+    >
+      <i data-lucide="bot-message-square" class="w-4 h-4 inline-block mr-2"></i> Media Balance Bot
+    </button>
+
     <div class="flex items-center gap-2 text-xl md:text-xl font-bold text-black">
       <i data-lucide="trending-up-down" class="w-4 h-4 md:w-5 md:h-5"></i>
       <span>Data Processor</span>
