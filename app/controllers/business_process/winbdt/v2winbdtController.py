@@ -291,11 +291,11 @@ class winbdtController:
         try:
             # Option 1: More specific selector
             selector = "td[data-type='member']#userTotalPlJackpot span.textRed"
-            element = row.select_one(selector)
+            element = row.query_selector(selector)
             
             if element:
-                return element.get_text(strip=True)
-            
+                return element.inner_text().strip()
+                
             # Option 2: Fallback selectors
             fallback_selectors = [
                 "td#userTotalPlJackpot span.textRed",
@@ -304,10 +304,10 @@ class winbdtController:
             ]
             
             for selector in fallback_selectors:
-                element = row.select_one(selector)
+                element = row.query_selector(selector)
                 if element:
-                    return element.get_text(strip=True)
-            
+                    return element.inner_text().strip()
+                    
             return "0"  # Default value when not found
             
         except Exception as e:
@@ -318,11 +318,11 @@ class winbdtController:
         try:
             # Primary selector with data-type attribute for specificity
             selector = "td[data-type='member']#userTotalCompany span.textRed"
-            element = row.select_one(selector)
+            element = row.query_selector(selector)
             
             if element:
-                return element.get_text(strip=True)
-            
+                return element.inner_text().strip()
+                
             # Fallback selectors if primary fails
             fallback_selectors = [
                 "td#userTotalCompany span.textRed",
@@ -331,10 +331,10 @@ class winbdtController:
             ]
             
             for selector in fallback_selectors:
-                element = row.select_one(selector)
+                element = row.query_selector(selector)
                 if element:
-                    return element.get_text(strip=True)
-            
+                    return element.inner_text().strip()
+                    
             return "0"  # Default value when not found
             
         except Exception as e:
@@ -370,7 +370,7 @@ class winbdtController:
                         }""",
                         formatted_startDate
                     )
-
+                    time.sleep(.5)
                     # Set endDate
                     page.evaluate(
                         """(date) => {
@@ -380,13 +380,11 @@ class winbdtController:
                         }""",
                         formatted_endDate
                     )
+                    time.sleep(.5)
 
                     log(job_id, "Inserted Filter")
                     page.click('#queryReport')
-
-                    page.wait_for_selector("#loading", state="visible", timeout=5000)
-
-                    page.wait_for_selector("#loading", state="hidden", timeout=15000)
+                    time.sleep(5)
                     
                     # try:
                     #     with page.expect_response(lambda r: "winloss" in r.url, timeout=30000):
@@ -398,35 +396,47 @@ class winbdtController:
    
 
                     self.wait_for_navigation(page, job_id)
-                    time.sleep(2.5)
-                    page.wait_for_selector("#tbodyAgent .trTitle", timeout=10000)
-                    html = page.inner_html("#tbodyAgent")
+                    log(job_id, "Scraping the HTML....")
 
-                    soup = BeautifulSoup(html, "html.parser")
+                    page.wait_for_selector("#tbodyAgent .trTitle")
+
+                    rows = page.query_selector_all("#tbodyAgent .trTitle")
                     data = []
+                    # time.sleep(7.5)
+                    # page.wait_for_selector("#tbodyAgent .trTitle", timeout=10000)
+                    # html = page.inner_html("#tbodyAgent")
 
-                    for row in soup.select("tr.trTitle"):
-                        cols = row.find_all("td")
+                    # soup = BeautifulSoup(html, "html.parser")
+                    # data = []
+                    number = 1
+                    for row in rows:
+                        cols = [cell.inner_text().strip() for cell in row.query_selector_all("td")]
                         if len(cols) >= 3:
                             data.append({
-                                "User ID": row.select_one("td a#titleUseID").get_text(strip=True) if row.select_one("td a#titleUseID") else "",
-                                "Name": row.select_one('td[data-type="name"]').get_text(strip=True) if row.select_one('td[data-type="name"]') else "",
-                                "Valid Turnover": row.select_one("td#userTotalPlTurnover").get_text(strip=True) if row.select_one("td#userTotalPlTurnover") else "",
-                                "Active Player": row.select_one("td span#userTotalActivePlayer").get_text(strip=True) if row.select_one("td span#userTotalActivePlayer") else "",
-                                "Win/loss": row.select_one("td div.member span#userTotalPlWinloss").get_text(strip=True) if row.select_one("td div.member span#userTotalPlWinloss") else "",
-                                "Jackpot Win/Loss": self.get_jackpot_value(row),  # Using the updated method
-                                "Member Comm.": row.select_one("td#userTotalPlComm").get_text(strip=True) if row.select_one("td#userTotalPlComm") else "",
-                                "Total P/L": row.select_one("td#userTotalPlProfitloss").get_text(strip=True) if row.select_one("td#userTotalPlProfitloss") else "",
-                                "PT Win/Loss": row.select_one("td#userTotaldownlineWinloss").get_text(strip=True) if row.select_one("td#userTotaldownlineWinloss") else "",
-                                "Direct Comm.": row.select_one("td#userTotaldownlineComm").get_text(strip=True) if row.select_one("td#userTotaldownlineComm") else "",
-                                "Total P/L (Direct)": row.select_one("td#userTotaldownlineProfitloss").get_text(strip=True) if row.select_one("td#userTotaldownlineProfitloss") else "",
-                                "PT Win/Loss (Self)": row.select_one("td#userTotalselfWinloss").get_text(strip=True) if row.select_one("td#userTotalselfWinloss") else "",
-                                "Self Comm.": row.select_one("td#userTotalselfComm").get_text(strip=True) if row.select_one("td#userTotalselfComm") else "",
-                                "Total P/L (Self)": row.select_one("td#userTotalselfProfitloss").get_text(strip=True) if row.select_one("td#userTotalselfProfitloss") else "",
-                                "Company": self.get_company_value(row)  # Using the updated method
+                                # "Date": datetime.strptime(formatted_date, "%d-%m-%Y").strftime("%b %d %Y"),
+                                "User ID": row.query_selector("td a#titleUseID").inner_text().strip(),
+                                "Name": row.query_selector('td[data-type="name"]').inner_text().strip(),
+                                "Valid Turnover": row.query_selector("td#userTotalPlTurnover").inner_text().strip(),
+                                "Active Player": row.query_selector("td span#userTotalActivePlayer").inner_text().strip(),
+                                "Win/loss": row.query_selector("td div.member span#userTotalPlWinloss").inner_text().strip(),
+                                "Jackpot Win/Loss": self.get_jackpot_value(row),
+                                "Member Comm.": row.query_selector("td#userTotalPlComm").inner_text().strip(),
+                                "Total P/L": row.query_selector("td#userTotalPlProfitloss").inner_text().strip(),
+                                "PT Win/Loss": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
+                                "Direct Comm.": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
+                                "Total P/L (Direct)": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
+                                "PT Win/Loss (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
+                                "Self Comm.": row.query_selector("td#userTotalselfComm").inner_text().strip(),
+                                "Total P/L (Self)": row.query_selector("td#userTotalselfProfitloss").inner_text().strip(),
+                                "Company": self.get_company_value(row)
                             })
+                            log(job_id, f"🔥 Done Processing on Row: {number}")
+                            number += 1
+                            time.sleep(.5) 
 
+                    
                     all_results.extend(data)
+                    browser.close
                     break  # ✅ exit retry loop if successful
 
                 except Exception as e:
@@ -435,7 +445,7 @@ class winbdtController:
                     if retries >= self.max_retries:
                         log(job_id, f"Failed to scrape data for {formatted_startDate} after several attempts.")
                         break
-
+            log(job_id, "✅ Processed Done")
             return all_results
 
     def provider_performance(self, page, job_id):
@@ -479,11 +489,9 @@ class winbdtController:
                     )
                     time.sleep(.5)
 
-                    log(job_id, "Inserted Filter")
+                    log(job_id, "Insertion Filter")
                     page.click('#queryReport')
-                    page.wait_for_selector("#loading", state="visible", timeout=5000)
-
-                    page.wait_for_selector("#loading", state="hidden", timeout=15000)
+                    time.sleep(5)
                 
                     # try:
                     #     with page.expect_response(lambda r: "winLossByProduct" in r.url, timeout=30000):
@@ -493,31 +501,41 @@ class winbdtController:
                     #     log(job_id, f"Timeout waiting for data response. Retry {retries}/{self.max_retries}")
                     #     continue
                     self.wait_for_navigation(page, job_id)
-                    
-                    time.sleep(2.5)
+                    log(job_id, "Scraping the HTML....")
+                    # time.sleep(7.5)
 
+                    # page.wait_for_selector("#tbodyAgent .trTitle")
+                    # html = page.inner_html("#tbodyAgent")
+
+                    # soup = BeautifulSoup(html, "html.parser")
+                    # data = []
                     page.wait_for_selector("#tbodyAgent .trTitle")
-                    html = page.inner_html("#tbodyAgent")
 
-                    soup = BeautifulSoup(html, "html.parser")
+                    rows = page.query_selector_all("#tbodyAgent .trTitle")
                     data = []
-
-                    for row in soup.select("tr.trTitle"):
-                        cols = row.find_all("td")
+                    number = 1
+                    for row in rows:
+                        cols = [cell.inner_text().strip() for cell in row.query_selector_all("td")]
                         if len(cols) >= 3:
                             data.append({
-                                "Product": row.select_one("td span#titleUseID").get_text(strip=True) if row.select_one("td span#titleUseID") else "",
-                                "Valid Turnover": row.select_one("td#userTotalPlTurnover").get_text(strip=True) if row.select_one("td#userTotalPlTurnover") else "",
-                                "Active Player": row.select_one("td span#userTotalActivePlayer").get_text(strip=True) if row.select_one("td span#userTotalActivePlayer") else "",
-                                "Win/loss": row.select_one("td#userTotaldownlineWinloss").get_text(strip=True) if row.select_one("td#userTotaldownlineWinloss") else "",
-                                "Jackpot Win/Loss": row.select_one("td#userTotaldownlineJackpot").get_text(strip=True) if row.select_one("td#userTotaldownlineJackpot") else "",
-                                "Member Comm.": row.select_one("td#userTotaldownlineComm").get_text(strip=True) if row.select_one("td#userTotaldownlineComm") else "",
-                                "Total P/L": row.select_one("td#userTotaldownlineProfitloss").get_text(strip=True) if row.select_one("td#userTotaldownlineProfitloss") else "",
-                                "PT Win/Loss (Self)": row.select_one("td#userTotalselfWinloss").get_text(strip=True) if row.select_one("td#userTotalselfWinloss") else "",
-                                "Self Comm.": row.select_one("td#userTotalselfComm").get_text(strip=True) if row.select_one("td#userTotalselfComm") else "",
-                                "Total P/L (Self)": row.select_one("td#userTotalselfProfitloss").get_text(strip=True) if row.select_one("td#userTotalselfProfitloss") else "",
+                                # "Date": datetime.strptime(formatted_date, "%d-%m-%Y").strftime("%b %d %Y"),
+                                "Product": row.query_selector("td span#titleUseID").inner_text().strip(),
+                                # "RTp($)": row.query_selector('td[data-type="name"]').inner_text().strip(),
+                                "Valid Turnover": row.query_selector("td#userTotalPlTurnover").inner_text().strip(),
+                                "Active Player": row.query_selector("td span#userTotalActivePlayer").inner_text().strip(),
+                                "Win/loss": row.query_selector("td#userTotaldownlineWinloss").inner_text().strip(),
+                                "Jackpot Win/Loss": row.query_selector("td#userTotaldownlineJackpot").inner_text().strip(),
+                                "Member Comm.": row.query_selector("td#userTotaldownlineComm").inner_text().strip(),
+                                "Total P/L": row.query_selector("td#userTotaldownlineProfitloss").inner_text().strip(),
+                                "PT Win/Loss (Self)": row.query_selector("td#userTotalselfWinloss").inner_text().strip(),
+                                "Self Comm.": row.query_selector("td#userTotalselfComm").inner_text().strip(),
+                                "Total P/L (Self)": row.query_selector("td#userTotalselfProfitloss").inner_text().strip(),
+                                # "Company": self.get_company_value(row)
                             })
-
+                            log(job_id, f"🔥 Done Processing on Row: {number}")
+                            number += 1
+                            time.sleep(.5)
+                    
                     all_results.extend(data)
                     break  # ✅ exit retry loop if successful
 
@@ -528,6 +546,7 @@ class winbdtController:
                         log(job_id, f"Failed to scrape data for {formatted_startDate} after several attempts.")
                         break
 
+            log(job_id, "✅ Processed Done")
             return all_results
     
     def run(self, job_id):

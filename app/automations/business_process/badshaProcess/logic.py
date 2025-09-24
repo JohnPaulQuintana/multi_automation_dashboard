@@ -3,7 +3,7 @@ from app.config.loader import (
     BP_USERNAME, BP_PASSWORD, BP_DRIVE, BP_DAILY, BP_WEEKLY, BP_MONTHLY, BP_BADSHA_SHEET
 )
 from app.debug.line import debug_line, debug_title
-from app.controllers.business_process.badsha_process.badshaProcessController import badshaProcessController
+from app.controllers.business_process.badsha_process.v2badshaProcessController import badshaProcessController
 from app.helpers.business_process.badsha_process.badshaSpreadsheet import badshaSpreadsheet
 from app.helpers.business_process.badsha_process.badshaTransferData import badshaTransferData
 from app.api.business_process.googledrive import googledrive
